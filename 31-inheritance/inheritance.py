@@ -1,51 +1,83 @@
 # 继承和多态
 
-# 定义基类
-class Animal:
-    def run(self):
-        print("Animal is running...")
 
-# 继承 Animal
+print("=== 继承和方法重写 ===")
+
+
+class Animal:
+    def __init__(self, name):
+        self.name = name
+
+    def run(self):
+        # 父类提供通用行为，子类可以继承或重写。
+        print(f"{self.name} is running...")
+
+
 class Dog(Animal):
     def run(self):
-        print("Dog is running...")
+        # 子类定义同名方法，会覆盖父类方法。
+        print(f"{self.name} is running fast...")
+
 
 class Cat(Animal):
     def run(self):
-        print("Cat is running...")
+        print(f"{self.name} is walking quietly...")
 
-# 创建实例
-dog = Dog()
-cat = Cat()
-dog.run()    # Dog is running...
-cat.run()    # Cat is running...
 
-# 子类也是父类的实例
-print(isinstance(dog, Dog))      # True
-print(isinstance(dog, Animal))   # True
+dog = Dog("旺财")
+cat = Cat("咪咪")
+dog.run()
+cat.run()
 
-# 多态：不同子类调用同一方法，行为不同
-def run_twice(animal):
-    animal.run()
-    animal.run()
 
-run_twice(Dog())    # Dog is running... × 2
-run_twice(Cat())    # Cat is running... × 2
+print("\n=== super() 调用父类方法 ===")
 
-# 新增一个子类，run_twice 不用改！
+
 class Tortoise(Animal):
+    def __init__(self, name, speed):
+        # super() 调用父类 __init__，避免重复初始化 name。
+        super().__init__(name)
+        self.speed = speed
+
     def run(self):
-        print("Tortoise is running slowly...")
+        print(f"{self.name} is running slowly at {self.speed} m/s...")
 
-run_twice(Tortoise())
 
-# Python 的鸭子类型：不要求继承，只要有 run 方法就行
+tortoise = Tortoise("龟仙人", 0.2)
+tortoise.run()
+
+
+print("\n=== isinstance 和 issubclass ===")
+
+# 子类实例同时也是父类实例。
+print(isinstance(dog, Dog))
+print(isinstance(dog, Animal))
+print(isinstance(dog, Cat))
+print(issubclass(Dog, Animal))
+print(issubclass(Dog, object))
+
+
+print("\n=== 多态 ===")
+
+
+def run_twice(animal):
+    # 只关心对象有没有 run()，不关心它具体是什么类。
+    animal.run()
+    animal.run()
+
+
+run_twice(Dog("小黑"))
+run_twice(Cat("小花"))
+run_twice(Tortoise("慢慢", 0.1))
+
+
+print("\n=== 鸭子类型 ===")
+
+
 class Timer:
     def run(self):
+        # Timer 没有继承 Animal，但有 run()，也能被 run_twice 使用。
         print("Timer is ticking...")
 
-run_twice(Timer())  # 也能跑！
 
-# 判断继承关系
-print(issubclass(Dog, Animal))   # True
-print(issubclass(Dog, object))   # True（所有类都继承自 object）
+run_twice(Timer())

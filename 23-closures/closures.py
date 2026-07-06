@@ -1,57 +1,93 @@
 # 返回函数（闭包）
 
-# 函数作为返回值
+
+print("=== 函数可以作为返回值 ===")
+
+
 def lazy_sum(*args):
+    # calc 引用了外层函数的 args，这就形成了闭包。
     def calc():
         total = 0
         for n in args:
             total += n
         return total
-    return calc       # 返回的是函数，不是结果
+
+    return calc
+
 
 f = lazy_sum(1, 3, 5, 7, 9)
-print(f)              # <function lazy_sum.<locals>.calc at 0x...>
-print(f())            # 25（调用时才真正计算）
+# 此时还没有真正求和，f 是一个等待调用的函数。
+print(type(f).__name__)
+print(f.__name__)
+print(f())
+# __closure__ 可以看到函数是否捕获了外层变量。
+print(f.__closure__ is not None)
+print(len(f.__closure__))
 
-# 每次调用返回一个新的函数
+
+print("\n=== 每次调用都会返回新函数 ===")
+
 f1 = lazy_sum(1, 2, 3)
 f2 = lazy_sum(1, 2, 3)
-print(f1 == f2)       # False（不同的函数对象）
+# 参数一样，也会生成两个不同的函数对象。
+print(f1 == f2)
+print(f1())
+print(f2())
 
-# 闭包陷阱：循环变量被捕获
-def count():
-    fs = []
+
+print("\n=== 循环变量陷阱 ===")
+
+
+def count_bad():
+    funcs = []
     for i in range(1, 4):
-        def f():
+        def square():
+            # 这里的 i 是外层变量，调用时已经变成循环结束后的 3。
             return i * i
-        fs.append(f)
-    return fs
 
-f1, f2, f3 = count()
-print(f1(), f2(), f3())   # 9 9 9（全是9！不是1 4 9）
+        funcs.append(square)
+    return funcs
 
-# 修复：用参数绑定当前值
+
+print([func() for func in count_bad()])
+
+
+print("\n=== 修复循环变量陷阱 ===")
+
+
 def count_fixed():
-    fs = []
+    funcs = []
     for i in range(1, 4):
-        def f(i=i):       # 用默认参数绑定
+        def square(i=i):
+            # 用默认参数把当前 i 的值固定下来。
             return i * i
-        fs.append(f)
-    return fs
 
-f1, f2, f3 = count_fixed()
-print(f1(), f2(), f3())   # 1 4 9（正确！）
+        funcs.append(square)
+    return funcs
 
-# nonlocal：在闭包中修改外层变量
-def counter():
-    n = 0
-    def inc():
+
+print([func() for func in count_fixed()])
+
+
+print("\n=== nonlocal 修改外层变量 ===")
+
+
+def counter(start=0):
+    n = start
+
+    def inc(step=1):
+        # nonlocal 表示修改外层函数里的 n，而不是新建局部变量。
         nonlocal n
-        n += 1
+        n += step
         return n
+
     return inc
 
+
 c = counter()
-print(c())   # 1
-print(c())   # 2
-print(c())   # 3
+print(c())
+print(c())
+print(c(10))
+
+c2 = counter(100)
+print(c2())

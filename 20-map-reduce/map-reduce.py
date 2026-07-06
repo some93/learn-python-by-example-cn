@@ -1,33 +1,73 @@
 # map/reduce 高阶函数
 
-# map：把函数作用到每个元素上
-def f(x):
-    return x * x
-
-result = map(f, [1, 2, 3, 4, 5])
-print(list(result))    # [1, 4, 9, 16, 25]
-
-# 用 lambda 更简洁
-print(list(map(lambda x: x * x, [1, 2, 3, 4, 5])))
-
-# 把整数列表转字符串列表
-print(list(map(str, [1, 2, 3, 4, 5])))  # ['1', '2', '3', '4', '5']
-
-# reduce：把序列累积计算
 from functools import reduce
 
-# 求和：1 + 2 + 3 + 4 + 5
+
+print("=== map：逐个加工 ===")
+
+
+def square(x):
+    return x * x
+
+
+# map 返回的是惰性迭代器，不会立刻生成完整列表。
+mapped = map(square, [1, 2, 3, 4, 5])
+print(type(mapped).__name__)
+print(list(mapped))
+# map 结果消费完之后，再转 list 就没有内容了。
+print(list(mapped))
+
+
+print("\n=== map 和列表生成式对比 ===")
+
+numbers = [1, 2, 3, 4, 5]
+# 这两种写法结果相同；列表生成式通常更直观。
+print(list(map(square, numbers)))
+print([square(x) for x in numbers])
+
+
+print("\n=== map 的常见用法 ===")
+
+# 把一组数字统一转换成字符串。
+print(list(map(str, [1, 2, 3, 4, 5])))
+
+names = ["Alice", "Bob", "Charlie"]
+scores = [85, 92, 78]
+# map 可以同时遍历多个序列，按位置把参数传给函数。
+records = map(lambda name, score: f"{name}: {score}", names, scores)
+print(list(records))
+
+
+print("\n=== reduce：累积合并 ===")
+
+# reduce 会把上一次计算结果继续和下一个元素合并。
 total = reduce(lambda x, y: x + y, [1, 2, 3, 4, 5])
-print(total)   # 15
+print(total)
 
-# 把 [1, 3, 5, 7] 变成 1357
-num = reduce(lambda x, y: x * 10 + y, [1, 3, 5, 7])
-print(num)     # 1357
+product = reduce(lambda x, y: x * y, [1, 2, 3, 4, 5])
+print(product)
 
-# 组合使用 map 和 reduce
-# 把字符串 '13579' 变成整数 13579
-def char_to_int(c):
-    return ord(c) - ord('0')
 
-result = reduce(lambda x, y: x * 10 + y, map(char_to_int, '13579'))
-print(result)  # 13579
+print("\n=== reduce 的初始值 ===")
+
+# 空序列必须提供初始值，否则 reduce 不知道从哪里开始。
+print(reduce(lambda x, y: x + y, [], 0))
+try:
+    print(reduce(lambda x, y: x + y, []))
+except TypeError as error:
+    print(type(error).__name__)
+
+
+print("\n=== map + reduce 组合 ===")
+
+
+def char_to_int(ch):
+    return ord(ch) - ord("0")
+
+
+def digits_to_int(text):
+    # 先把字符映射成数字，再用 reduce 拼成整数。
+    return reduce(lambda x, y: x * 10 + y, map(char_to_int, text))
+
+
+print(digits_to_int("13579"))

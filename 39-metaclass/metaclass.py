@@ -1,98 +1,130 @@
 # 元类（Metaclass）
 
-# type() 不仅能查类型，还能动态创建类！
 
-# 常规定义
+print("=== 类也是对象 ===")
+
+
 class Hello:
     def hello(self):
-        print("Hello, world!")
+        return "Hello, world!"
 
-# 等价于用 type() 创建
+
+# 类本身也是对象，默认由 type 创建。
+print(type(Hello).__name__)
+print(type(Hello()).__name__)
+print(Hello().hello())
+
+
+print("\n=== type() 动态创建类 ===")
+
+
 def hello_func(self):
-    print("Hello, world!")
+    return "Hello from dynamic class!"
 
-Hello2 = type('Hello2', (object,), {'hello': hello_func})
 
-h = Hello2()
-h.hello()    # Hello, world!
-# type(类名, (父类们,), {方法字典})
+# type(name, bases, attrs) 可以在运行时创建类。
+Hello2 = type("Hello2", (object,), {"hello": hello_func})
 
-# metaclass：控制类的创建过程
-# 最常见的用途：ORM（对象关系映射）
+obj = Hello2()
+print(type(Hello2).__name__)
+print(type(obj).__name__)
+print(obj.hello())
 
-# 定义 metaclass
-class ListMetaclass(type):
-    def __new__(cls, name, bases, attrs):
-        attrs['add'] = lambda self, value: self.append(value)
-        return type.__new__(cls, name, bases, attrs)
 
-# 使用 metaclass
-class MyList(list, metaclass=ListMetaclass):
+print("\n=== metaclass 控制类的创建 ===")
+
+
+class AddMethodMeta(type):
+    def __new__(mcls, name, bases, attrs):
+        # 类创建前修改 attrs，相当于给类自动添加方法。
+        attrs["add"] = lambda self, value: self.append(value)
+        return super().__new__(mcls, name, bases, attrs)
+
+
+class MyList(list, metaclass=AddMethodMeta):
+    # metaclass 会接管 MyList 这个类的创建过程。
     pass
 
-L = MyList()
-L.add(1)     # metaclass 自动添加的方法
-L.add(2)
-L.add(3)
-print(L)     # [1, 2, 3]
 
-# 简易 ORM 示例
+items = MyList([1, 2])
+items.add(3)
+print(items)
+print(type(MyList).__name__)
+
+
+print("\n=== 简易 ORM：收集字段映射 ===")
+
+
 class Field:
-    def __init__(self, name, column_type):
-        self.name = name
+    def __init__(self, column_name, column_type):
+        self.column_name = column_name
         self.column_type = column_type
 
-    def __str__(self):
-        return f"<{self.__class__.__name__}:{self.name}>"
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.column_name})"
+
 
 class StringField(Field):
-    def __init__(self, name):
-        super().__init__(name, 'varchar(100)')
+    def __init__(self, column_name):
+        super().__init__(column_name, "varchar(100)")
+
 
 class IntegerField(Field):
-    def __init__(self, name):
-        super().__init__(name, 'bigint')
+    def __init__(self, column_name):
+        super().__init__(column_name, "bigint")
 
-class ModelMetaclass(type):
-    def __new__(cls, name, bases, attrs):
-        if name == 'Model':
-            return type.__new__(cls, name, bases, attrs)
-        print(f"创建模型: {name}")
+
+class ModelMeta(type):
+    def __new__(mcls, name, bases, attrs):
+        if name == "Model":
+            # 基类 Model 本身不需要映射数据库表。
+            return super().__new__(mcls, name, bases, attrs)
+
         mappings = {}
-        for k, v in attrs.items():
-            if isinstance(v, Field):
-                print(f"  映射字段: {k} ==> {v}")
-                mappings[k] = v
-        for k in mappings:
-            attrs.pop(k)
-        attrs['__mappings__'] = mappings
-        attrs['__table__'] = name
-        return type.__new__(cls, name, bases, attrs)
+        for attr_name, attr_value in list(attrs.items()):
+            if isinstance(attr_value, Field):
+                # 找出类属性里的字段定义，收集成映射表。
+                mappings[attr_name] = attr_value
+                # 删除字段属性，避免和实例数据访问冲突。
+                attrs.pop(attr_name)
 
-class Model(dict, metaclass=ModelMetaclass):
+        # 把 ORM 需要的元信息挂到类上。
+        attrs["__mappings__"] = mappings
+        attrs["__table__"] = name.lower()
+        return super().__new__(mcls, name, bases, attrs)
+
+
+class Model(dict, metaclass=ModelMeta):
     def __getattr__(self, key):
         try:
+            # 允许 user.name 读取底层字典里的 user["name"]。
             return self[key]
-        except KeyError:
-            raise AttributeError(f"'Model' 没有属性 '{key}'")
+        except KeyError as exc:
+            raise AttributeError(key) from exc
 
     def __setattr__(self, key, value):
+        # 允许 user.name = "Alice" 写入底层字典。
         self[key] = value
 
-    def save(self):
+    def save_sql(self):
         fields = []
-        params = []
-        for k, v in self.__mappings__.items():
-            fields.append(v.name)
-            params.append(str(getattr(self, k, None)))
-        sql = f"INSERT INTO {self.__table__} ({','.join(fields)}) VALUES ({','.join(params)})"
-        print(f"SQL: {sql}")
+        values = []
+        for attr_name, field in self.__mappings__.items():
+            # 根据字段映射生成一条演示用 INSERT 语句。
+            fields.append(field.column_name)
+            values.append(repr(getattr(self, attr_name, None)))
+        return f"INSERT INTO {self.__table__} ({', '.join(fields)}) VALUES ({', '.join(values)})"
 
-# 使用 ORM
+
 class User(Model):
-    id = IntegerField('id')
-    name = StringField('username')
-    email = StringField('email')
+    id = IntegerField("id")
+    name = StringField("username")
+    email = StringField("email")
 
-u = User(id=1, name='Alice', email='alice@example.com')
-u.save()
+
+print(User.__table__)
+print(User.__mappings__)
+
+user = User(id=1, name="Alice", email="alice@example.com")
+print(user.name)
+print(user.save_sql())

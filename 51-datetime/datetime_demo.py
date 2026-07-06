@@ -1,47 +1,83 @@
-# datetime
+# datetime 日期时间处理
 
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 
-# 获取当前日期和时间
-now = datetime.now()
-print(now)
-print(type(now))
 
-# 创建指定日期时间
-dt = datetime(2024, 6, 15, 14, 30, 0)
-print(dt)
+print("=== 创建 date / time / datetime ===")
 
-# 时间戳（timestamp）
-ts = now.timestamp()
-print(ts)    # 浮点数，从 1970-01-01 00:00:00 UTC 开始的秒数
+# date 只表示日期，time 只表示一天中的时间。
+course_day = date(2026, 7, 6)
+start_time = time(15, 30, 45)
 
-# 时间戳转 datetime
-print(datetime.fromtimestamp(ts))        # 本地时间
-print(datetime.utcfromtimestamp(ts))     # UTC 时间
+# datetime 同时包含日期和时间；这里故意用固定时间，方便对照输出。
+lesson_time = datetime(2026, 7, 6, 15, 30, 45)
 
-# 字符串转 datetime
-dt = datetime.strptime('2024-06-15 14:30:00', '%Y-%m-%d %H:%M:%S')
-print(dt)
+print(course_day)
+print(start_time)
+print(lesson_time)
 
-# datetime 转字符串
-print(now.strftime('%Y年%m月%d日 %H:%M:%S'))
 
-# 时间加减
-print(now + timedelta(hours=10))
-print(now - timedelta(days=1))
-print(now + timedelta(days=2, hours=12))
+print("\n=== 字符串和 datetime 互转 ===")
 
-# 时区处理
-utc = timezone.utc
-utc_now = datetime.now(utc)
-print(f"UTC: {utc_now}")
+text = "2026-07-06 15:30:45"
 
-# 东八区
-bj_tz = timezone(timedelta(hours=8))
-bj_now = utc_now.astimezone(bj_tz)
-print(f"北京: {bj_now}")
+# strptime 按格式解析字符串，格式必须和文本严格对应。
+parsed = datetime.strptime(text, "%Y-%m-%d %H:%M:%S")
+print(parsed)
 
-# 东九区（东京）
+# strftime 把 datetime 格式化成适合展示的字符串。
+print(parsed.strftime("%Y年%m月%d日 %H:%M"))
+print(parsed.strftime("%A"))
+
+
+print("\n=== timedelta 时间加减 ===")
+
+# timedelta 表示一段时间，可用于计算截止时间、过期时间。
+deadline = lesson_time + timedelta(days=7, hours=2)
+before = lesson_time - timedelta(minutes=45)
+duration = deadline - lesson_time
+
+print(deadline)
+print(before)
+print(duration)
+print(duration.total_seconds())
+
+
+print("\n=== 时间戳 timestamp ===")
+
+beijing_tz = timezone(timedelta(hours=8))
+
+# 带时区的 datetime 叫 aware datetime，转时间戳才不会依赖本机时区。
+beijing_time = datetime(2026, 7, 6, 15, 30, 45, tzinfo=beijing_tz)
+timestamp = beijing_time.timestamp()
+
+print(timestamp)
+print(datetime.fromtimestamp(timestamp, tz=timezone.utc))
+print(datetime.fromtimestamp(timestamp, tz=beijing_tz))
+
+
+print("\n=== 时区转换 ===")
+
 tokyo_tz = timezone(timedelta(hours=9))
-tokyo_now = utc_now.astimezone(tokyo_tz)
-print(f"东京: {tokyo_now}")
+new_york_tz = timezone(timedelta(hours=-4))
+
+# astimezone 不改变同一瞬间，只改变展示所在时区。
+utc_time = beijing_time.astimezone(timezone.utc)
+tokyo_time = beijing_time.astimezone(tokyo_tz)
+new_york_time = beijing_time.astimezone(new_york_tz)
+
+print(f"北京: {beijing_time.isoformat()}")
+print(f"UTC: {utc_time.isoformat()}")
+print(f"东京: {tokyo_time.isoformat()}")
+print(f"纽约: {new_york_time.isoformat()}")
+
+
+print("\n=== naive vs aware ===")
+
+# 没有 tzinfo 的 datetime 是 naive datetime，不携带时区信息。
+naive = datetime(2026, 7, 6, 15, 30, 45)
+aware = naive.replace(tzinfo=beijing_tz)
+
+print(naive.tzinfo)
+print(aware.tzinfo)
+print(aware.isoformat())

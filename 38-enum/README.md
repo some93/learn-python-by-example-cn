@@ -2,39 +2,57 @@
 
 ## 🎯 这一关你会学到
 
-- 理解枚举的用途
-- 用 `Enum` 和 `@unique` 定义枚举
-- 掌握枚举的多种访问方式
-- 在 `match` 语句中使用枚举
+- 为什么要用枚举替代魔法数字和魔法字符串
+- `Enum("Name", names)` 快捷创建枚举
+- 继承 `Enum` 定义更清晰的枚举类
+- `.name`、`.value`、按名字/值查找枚举成员
+- `@unique` 如何检查重复值
+- `IntEnum` 和普通 `Enum` 的区别
 
 ## 🤔 先想一个问题
 
-你用数字 0-6 表示星期一到星期天，但同事把 0 当成了星期天，系统炸了。如果有一种类型，`Weekday.Mon` 就是星期一，不会搞混。这就是**枚举**。
+你用数字表示订单状态：
 
-带着这个问题，我们来看代码。
+```python
+status = 1
+if status == 1:
+    print("已支付")
+```
+
+问题来了：过两个月同事看到 `status == 1`，还能一眼知道它是“已支付”吗？如果另一个系统也用 `1` 表示“失败”，会不会混？
+
+枚举就是给固定值起清楚名字：`OrderStatus.PAID` 比 `1` 更不容易误会。
 
 ## 📖 看代码
 
 ```python
 # 枚举类
 
-from enum import Enum, unique
+from enum import Enum, IntEnum, unique
 
-# 定义枚举
-Month = Enum('Month', ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'))
 
-# 访问枚举成员
-print(Month.Jan)          # Month.Jan
-print(Month.Jan.value)    # 1（自动从 1 开始赋值）
+print("=== 快捷创建枚举 ===")
 
-# 遍历枚举
-for name, member in Month.__members__.items():
-    print(f"{name} => {member.value}")
+# Enum() 可以快速创建枚举类，第二个参数是成员名列表。
+Month = Enum(
+    "Month",
+    ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+)
 
-# 自定义枚举类（推荐方式）
-@unique   # 保证值不重复
+print(Month.Jan)
+print(Month.Jan.name)
+# 默认 value 从 1 开始递增。
+print(Month.Jan.value)
+print(Month["Jan"])
+print(Month(1))
+
+
+print("\n=== 继承 Enum 定义枚举 ===")
+
+
+@unique
 class Weekday(Enum):
+    # 继承 Enum 的写法更适合业务代码，成员名和值一眼可见。
     Mon = 1
     Tue = 2
     Wed = 3
@@ -43,66 +61,326 @@ class Weekday(Enum):
     Sat = 6
     Sun = 7
 
-# 多种访问方式
-day = Weekday.Mon
-print(day)              # Weekday.Mon
-print(day.name)         # Mon
-print(day.value)        # 1
-print(Weekday(1))       # Weekday.Mon（通过值获取）
-print(Weekday['Mon'])   # Weekday.Mon（通过名字获取）
 
-# 枚举比较
-print(Weekday.Mon == Weekday.Mon)    # True
-print(Weekday.Mon == Weekday.Tue)    # False
-# Weekday.Mon < Weekday.Tue          # TypeError! 枚举不支持大小比较
+day = Weekday.Sat
+print(day)
+print(day.name)
+print(day.value)
+# 可以按名字或按值反向获取枚举成员。
+print(Weekday["Sat"])
+print(Weekday(6))
 
-# 枚举用于 match
+
+print("\n=== 遍历枚举 ===")
+
+for member in Weekday:
+    # 遍历枚举时拿到的是枚举成员，不是普通字符串或整数。
+    print(f"{member.name} => {member.value}")
+
+
+print("\n=== 枚举比较 ===")
+
+print(Weekday.Mon == Weekday.Mon)
+print(Weekday.Mon == Weekday.Tue)
+print(Weekday.Mon is Weekday.Mon)
+# 普通 Enum 不会直接等于它的 value。
+print(Weekday.Mon == 1)
+
+
+print("\n=== IntEnum 可以和整数比较 ===")
+
+
+class HttpStatus(IntEnum):
+    # IntEnum 适合需要和整数兼容的场景，例如 HTTP 状态码。
+    OK = 200
+    NOT_FOUND = 404
+    SERVER_ERROR = 500
+
+
+print(HttpStatus.OK == 200)
+print(HttpStatus.NOT_FOUND > HttpStatus.OK)
+
+
+print("\n=== @unique 检查重复值 ===")
+
+try:
+    # @unique 会在类创建时检查重复 value。
+    @unique
+    class BadStatus(Enum):
+        SUCCESS = 1
+        OK = 1
+except ValueError as error:
+    print(type(error).__name__)
+
+
+print("\n=== match 中使用枚举 ===")
+
 status = Weekday.Sat
+
 match status:
+    # match/case 可以直接匹配枚举成员。
     case Weekday.Sat | Weekday.Sun:
-        print("周末！")
+        print("周末")
     case _:
         print("工作日")
 ```
 
 ## 🔍 师兄给你逐行拆
 
-> 代码已经在注释中做了详细说明，这里挑重点讲。
+### 快捷创建枚举
 
-### 核心要点
+```python
+Month = Enum(
+    "Month",
+    ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+)
+```
 
-- `Enum('Name', ('A', 'B'))` 是快捷方式，`value` 从 1 开始自动编号
-- 继承 `Enum` 类是更推荐的定义方式，可以自定义 `value`
-- `@unique` 装饰器保证枚举值不重复
-- 枚举成员可以通过 `.name`（名字）和 `.value`（值）访问
-- 枚举成员是单例，可以用 `==` 比较，但不支持 `<` / `>` 排序
+**这行在干嘛？**
+
+这是函数式 API，快速创建一个名为 `Month` 的枚举类，成员有 `Jan` 到 `Dec`。
+
+如果不手动指定值，`Enum()` 会从 `1` 开始自动编号。
+
+**怎么访问？**
+
+```python
+Month.Jan      # 通过属性访问
+Month["Jan"]   # 通过名字访问
+Month(1)       # 通过值访问
+```
+
+---
+
+### `.name` 和 `.value`
+
+```python
+print(Month.Jan)
+print(Month.Jan.name)
+print(Month.Jan.value)
+```
+
+**这行在干嘛？**
+
+一个枚举成员有两个常用信息：
+
+- `.name`：成员名字，比如 `"Jan"`；
+- `.value`：成员值，比如 `1`。
+
+`print(Month.Jan)` 输出 `Month.Jan`，它不是普通字符串，也不是普通整数，而是枚举成员。
+
+---
+
+### 继承 `Enum` 定义枚举
+
+```python
+@unique
+class Weekday(Enum):
+    Mon = 1
+    Tue = 2
+    Wed = 3
+    Thu = 4
+    Fri = 5
+    Sat = 6
+    Sun = 7
+```
+
+**这行在干嘛？**
+
+这是更推荐的写法：定义一个 `Weekday` 枚举类，每个成员都有明确值。
+
+`@unique` 会检查枚举值不能重复。如果两个成员值一样，会直接报错。
+
+**为什么推荐这种写法？**
+
+因为它更适合写业务代码：清晰、可扩展、能加方法和注释。
+
+---
+
+### 遍历枚举
+
+```python
+for member in Weekday:
+    print(f"{member.name} => {member.value}")
+```
+
+**这行在干嘛？**
+
+枚举类可以直接遍历，依次拿到每个枚举成员。
+
+如果你需要名字和值，就用 `member.name` 和 `member.value`。
+
+---
+
+### 普通 `Enum` 不等于整数
+
+```python
+print(Weekday.Mon == Weekday.Mon)
+print(Weekday.Mon == Weekday.Tue)
+print(Weekday.Mon is Weekday.Mon)
+print(Weekday.Mon == 1)
+```
+
+**这行在干嘛？**
+
+枚举成员是单例，所以：
+
+```python
+Weekday.Mon is Weekday.Mon
+```
+
+是 `True`。
+
+但普通 `Enum` 不会和整数直接相等：
+
+```python
+Weekday.Mon == 1
+```
+
+是 `False`。
+
+**为什么这样设计？**
+
+枚举的意义就是避免把状态值和普通数字混在一起。`Weekday.Mon` 比 `1` 更有语义，也更安全。
+
+---
+
+### `IntEnum`：需要和整数兼容时使用
+
+```python
+class HttpStatus(IntEnum):
+    OK = 200
+    NOT_FOUND = 404
+    SERVER_ERROR = 500
+```
+
+**这行在干嘛？**
+
+`IntEnum` 是整数枚举。它的成员可以和整数比较：
+
+```python
+HttpStatus.OK == 200
+```
+
+也支持大小比较：
+
+```python
+HttpStatus.NOT_FOUND > HttpStatus.OK
+```
+
+**什么时候用？**
+
+当你必须和外部系统的整数协议兼容，比如 HTTP 状态码、数据库里的数字状态，可以考虑 `IntEnum`。
+
+如果没有这个需求，优先用普通 `Enum`，类型边界更清楚。
+
+---
+
+### `@unique` 检查重复值
+
+```python
+try:
+    @unique
+    class BadStatus(Enum):
+        SUCCESS = 1
+        OK = 1
+except ValueError as error:
+    print(type(error).__name__)
+```
+
+**这行在干嘛？**
+
+`SUCCESS` 和 `OK` 的值都等于 `1`。加了 `@unique` 后，Python 会发现重复值并抛出 `ValueError`。
+
+**为什么有用？**
+
+有些业务状态不能有别名。重复值会让状态判断变模糊，`@unique` 可以提前发现问题。
+
+---
+
+### `match` 中使用枚举
+
+```python
+match status:
+    case Weekday.Sat | Weekday.Sun:
+        print("周末")
+    case _:
+        print("工作日")
+```
+
+**这行在干嘛？**
+
+枚举很适合和 `match` 搭配。这里判断 `status` 是周六或周日，就输出“周末”，否则输出“工作日”。
+
+比起写 `status in (6, 7)`，枚举版本更清楚。
 
 ## 🏃 跑一下试试
 
 ```bash
-cd 38-enum
-python enum.py
+$ python enum-demo.py
+=== 快捷创建枚举 ===
+Month.Jan
+Jan
+1
+Month.Jan
+Month.Jan
+
+=== 继承 Enum 定义枚举 ===
+Weekday.Sat
+Sat
+6
+Weekday.Sat
+Weekday.Sat
+
+=== 遍历枚举 ===
+Mon => 1
+Tue => 2
+Wed => 3
+Thu => 4
+Fri => 5
+Sat => 6
+Sun => 7
+
+=== 枚举比较 ===
+True
+False
+True
+False
+
+=== IntEnum 可以和整数比较 ===
+True
+True
+
+=== @unique 检查重复值 ===
+ValueError
+
+=== match 中使用枚举 ===
+周末
 ```
 
 ## 💡 师兄的碎碎念
 
-- `Enum('Name', ('A', 'B'))` 是快捷方式，`value` 从 1 开始自动编号
-- 继承 `Enum` 类是更推荐的定义方式，可以自定义 `value`
-- `@unique` 装饰器保证枚举值不重复
-- 枚举成员可以通过 `.name`（名字）和 `.value`（值）访问
-- 枚举成员是单例，可以用 `==` 比较，但不支持 `<` / `>` 排序
+- 枚举适合表示固定集合：星期、月份、订单状态、用户角色、错误码。
+- 普通 `Enum` 和整数/字符串保持边界，不会随便相等。
+- 需要兼容整数协议时，用 `IntEnum`。
+- `@unique` 能提前发现重复值，推荐在业务枚举上使用。
+- 不要到处散落魔法数字和魔法字符串；把它们收拢成枚举更好维护。
 
 ## 🎓 这一关的知识点清单
 
-| 知识点 | 说明 |
-|--------|------|
-| `Enum('Name', tuple)` | 快捷创建枚举 |
-| `class X(Enum)` | 继承方式定义枚举（推荐） |
-| `@unique` | 保证枚举值不重复 |
-| `.name / .value` | 获取枚举成员的名字和值 |
-| `Weekday(1)` | 通过值获取枚举成员 |
-| `Weekday['Mon']` | 通过名字获取枚举成员 |
+- **Enum**：定义枚举类型，成员是固定的一组命名值。
+- **函数式创建**：`Enum("Month", ("Jan", "Feb"))` 快速创建枚举。
+- **继承式创建**：`class Weekday(Enum): ...` 更适合业务代码。
+- **name/value**：`.name` 是成员名，`.value` 是成员值。
+- **按名查找**：`Weekday["Sat"]`。
+- **按值查找**：`Weekday(6)`。
+- **@unique**：检查枚举值是否重复。
+- **IntEnum**：能和整数兼容的枚举。
 
 ## ➡️ 下一关
 
-下一关我们学习 [元类](../39-metaclass/README.md)，继续加油！
+枚举类讲完，面向对象进阶最后一关是元类。它比较抽象，我们会用“类也是对象”这条线慢慢拆 👉 [下一关：元类 →](../39-metaclass/)
+
+
+
+

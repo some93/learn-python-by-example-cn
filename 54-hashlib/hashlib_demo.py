@@ -1,49 +1,85 @@
-# hashlib
+# hashlib 哈希算法
 
 import hashlib
+import hmac
 
-# MD5（128位，不再安全，仅用于校验）
-md5 = hashlib.md5()
-md5.update('hello world'.encode('utf-8'))
-print(f"MD5: {md5.hexdigest()}")
 
-# 分多次 update 效果相同
-md5_2 = hashlib.md5()
-md5_2.update('hello '.encode('utf-8'))
-md5_2.update('world'.encode('utf-8'))
-print(f"MD5: {md5_2.hexdigest()}")    # 和上面一样
+print("=== 常见哈希算法 ===")
 
-# SHA-1（160位）
-sha1 = hashlib.sha1('hello world'.encode('utf-8'))
-print(f"SHA1: {sha1.hexdigest()}")
+message = "hello world".encode("utf-8")
 
-# SHA-256（256位，推荐）
-sha256 = hashlib.sha256('hello world'.encode('utf-8'))
-print(f"SHA256: {sha256.hexdigest()}")
+# MD5 和 SHA-1 已不适合安全场景，这里只用于认识输出形式。
+print(hashlib.md5(message).hexdigest())
+print(hashlib.sha1(message).hexdigest())
+print(hashlib.sha256(message).hexdigest())
 
-# 用途一：校验文件完整性
-def file_hash(path):
-    sha = hashlib.sha256()
-    with open(path, 'rb') as f:
-        while chunk := f.read(8192):
-            sha.update(chunk)
-    return sha.hexdigest()
 
-# 用途二：存储密码（一定要加盐！）
-import secrets
+print("\n=== 分多次 update 效果相同 ===")
 
-def hash_password(password):
-    salt = secrets.token_hex(16)
-    hashed = hashlib.sha256((salt + password).encode()).hexdigest()
-    return f"{salt}:{hashed}"
+sha_once = hashlib.sha256(b"hello world").hexdigest()
 
-def verify_password(password, stored):
-    salt, hashed = stored.split(':')
-    return hashlib.sha256((salt + password).encode()).hexdigest() == hashed
+sha_chunks = hashlib.sha256()
+sha_chunks.update(b"hello ")
+sha_chunks.update(b"world")
 
-stored = hash_password('mypassword')
-print(f"存储: {stored}")
-print(f"验证正确密码: {verify_password('mypassword', stored)}")
-print(f"验证错误密码: {verify_password('wrong', stored)}")
+print(sha_once)
+print(sha_chunks.hexdigest())
+print(sha_once == sha_chunks.hexdigest())
 
-# 注意：实际项目中用 bcrypt 或 argon2，比 sha256 更安全
+
+print("\n=== 输入稍变，结果完全不同 ===")
+
+# 哈希算法有雪崩效应：输入改 1 个字符，摘要也会大幅变化。
+left = hashlib.sha256(b"hello world").hexdigest()
+right = hashlib.sha256(b"hello worle").hexdigest()
+
+print(left[:16])
+print(right[:16])
+print(left == right)
+
+
+print("\n=== 分块计算文件摘要 ===")
+
+chunks = [b"line 1\n", b"line 2\n", b"line 3\n"]
+file_hash = hashlib.sha256()
+
+# 大文件不要一次性读入内存，应该分块 update。
+for chunk in chunks:
+    file_hash.update(chunk)
+
+print(file_hash.hexdigest())
+
+
+print("\n=== PBKDF2 存储密码摘要 ===")
+
+password = "mypassword"
+salt = bytes.fromhex("00112233445566778899aabbccddeeff")
+iterations = 100_000
+
+# PBKDF2 会反复计算很多轮，比单次 sha256 更适合密码存储。
+password_hash = hashlib.pbkdf2_hmac(
+    "sha256",
+    password.encode("utf-8"),
+    salt,
+    iterations,
+)
+
+stored = f"pbkdf2_sha256${iterations}${salt.hex()}${password_hash.hex()}"
+print(stored)
+
+
+def verify_password(password, stored_text):
+    algorithm, iterations_text, salt_hex, digest_hex = stored_text.split("$")
+    hash_name = algorithm.removeprefix("pbkdf2_")
+    iterations = int(iterations_text)
+    salt = bytes.fromhex(salt_hex)
+    expected = bytes.fromhex(digest_hex)
+
+    actual = hashlib.pbkdf2_hmac(hash_name, password.encode("utf-8"), salt, iterations)
+
+    # compare_digest 用于避免普通字符串比较带来的时序攻击风险。
+    return hmac.compare_digest(actual, expected)
+
+
+print(verify_password("mypassword", stored))
+print(verify_password("wrong-password", stored))

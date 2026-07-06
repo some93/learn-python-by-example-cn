@@ -1,70 +1,125 @@
 # 错误处理
 
-# try...except...finally
+import logging
+import sys
+
+
+logging.basicConfig(level=logging.ERROR, format="%(levelname)s:%(message)s", stream=sys.stdout)
+
+
+print("=== try / except / finally ===")
+
 try:
     print("try...")
-    r = 10 / 0
-    print("结果:", r)       # 不会执行
-except ZeroDivisionError as e:
-    print("except:", e)
+    # 这里故意制造除零错误，演示 except 如何接住异常。
+    result = 10 / 0
+    print("结果:", result)
+except ZeroDivisionError as error:
+    print("except:", error)
 finally:
-    print("finally...")     # 总会执行
+    # finally 不管有没有异常都会执行，常用于释放资源。
+    print("finally...")
 
-# 捕获多种异常
-try:
-    r = 10 / int('abc')
-except ValueError as e:
-    print("ValueError:", e)
-except ZeroDivisionError as e:
-    print("ZeroDivisionError:", e)
 
-# 异常的继承关系：父类能捕获子类异常
-try:
-    r = 10 / 0
-except Exception as e:     # Exception 是大多数异常的父类
-    print("捕获到:", type(e).__name__, e)
+print("\n=== 捕获多种异常 ===")
 
-# else：没有异常时执行
 try:
-    r = 10 / 2
+    # int("abc") 会先抛出 ValueError，后面的除法不会执行。
+    result = 10 / int("abc")
+except ValueError as error:
+    print("ValueError:", error)
+except ZeroDivisionError as error:
+    print("ZeroDivisionError:", error)
+
+
+print("\n=== else：没有异常时执行 ===")
+
+try:
+    result = 10 / 2
 except ZeroDivisionError:
     print("除零错误")
 else:
-    print("没有异常，结果:", r)
+    # else 只在 try 没有异常时执行。
+    print("没有异常，结果:", result)
+finally:
+    print("清理资源")
 
-# 使用 logging 记录异常（推荐！）
-import logging
+
+print("\n=== 异常继承关系 ===")
 
 try:
     10 / 0
-except Exception:
-    logging.exception("出错了")    # 会打印完整堆栈
+except Exception as error:
+    # Exception 能捕获大多数业务异常，但不要无脑吞掉错误。
+    print(type(error).__name__)
 
-# 抛出异常
+
+print("\n=== logging 记录异常 ===")
+
+try:
+    int("not-a-number")
+except ValueError as error:
+    # logging 可以记录错误信息，比 print 更适合真实项目。
+    logging.error("转换失败: %s", error)
+
+
+print("\n=== 主动抛出异常 ===")
+
+
 def check_age(age):
     if age < 0:
+        # 主动抛异常可以把非法输入挡在函数入口。
         raise ValueError(f"年龄不能为负数: {age}")
     return age
 
+
 try:
     check_age(-1)
-except ValueError as e:
-    print("捕获:", e)
+except ValueError as error:
+    print("捕获:", error)
 
-# 自定义异常
-class FooError(ValueError):
+
+print("\n=== 自定义异常 ===")
+
+
+class AgeError(ValueError):
+    # 自定义异常可以让调用方更精确地捕获业务错误。
     pass
 
-try:
-    raise FooError("自定义异常")
-except FooError as e:
-    print("FooError:", e)
 
-# 异常链：raise ... from ...
+def check_adult(age):
+    if age < 18:
+        raise AgeError("未成年人不能注册")
+    return True
+
+
+try:
+    check_adult(16)
+except AgeError as error:
+    print("AgeError:", error)
+
+
+print("\n=== 异常链 raise from ===")
+
 try:
     try:
         1 / 0
-    except ZeroDivisionError as e:
-        raise RuntimeError("计算失败") from e
-except RuntimeError as e:
-    print(f"{e}，原因: {e.__cause__}")
+    except ZeroDivisionError as error:
+        # raise from 会保留原始异常，方便定位根因。
+        raise RuntimeError("计算失败") from error
+except RuntimeError as error:
+    print(error)
+    print(type(error.__cause__).__name__)
+
+
+print("\n=== 重新抛出异常 ===")
+
+try:
+    try:
+        check_age(-5)
+    except ValueError:
+        print("记录后继续抛出")
+        # 单独写 raise 表示重新抛出当前异常。
+        raise
+except ValueError as error:
+    print("外层捕获:", error)

@@ -2,82 +2,123 @@
 
 ## 🎯 这一关你会学到
 
-- 理解哈希算法的概念
-- 使用 MD5、SHA-1、SHA-256
-- 实现安全的密码存储（加盐哈希）
-- 了解文件校验的应用
+- 哈希摘要是什么，和加密有什么区别
+- 如何计算 MD5、SHA-1、SHA-256
+- 为什么可以分多次 `update()`
+- 哈希的雪崩效应是什么
+- 如何分块计算文件摘要
+- 如何用 PBKDF2 演示密码摘要存储
+- 为什么验证摘要要用 `hmac.compare_digest()`
 
 ## 🤔 先想一个问题
 
-你要存储用户密码，不能存明文（数据库泄露就完了）。但加密后还得能验证密码对不对。这种「只能正向计算、不能反向推导」的技术就是**哈希**。
+下载软件时，官网常常给一个 SHA-256 值。你下载完文件后也算一遍，如果两个值一样，就说明文件大概率没被篡改。
 
-带着这个问题，我们来看代码。
+这就是哈希的用途之一：**把任意长度的数据，计算成固定长度的摘要**。
+
+但哈希不是加密。加密通常能解密回原文，哈希不能反推原文。密码存储利用的正是这个特点：数据库里不存明文密码，只存密码摘要。
 
 ## 📖 看代码
 
 ```python
-# hashlib
+# hashlib 哈希算法
 
 import hashlib
+import hmac
 
-# MD5（128位，不再安全，仅用于校验）
-md5 = hashlib.md5()
-md5.update('hello world'.encode('utf-8'))
-print(f"MD5: {md5.hexdigest()}")
 
-# 分多次 update 效果相同
-md5_2 = hashlib.md5()
-md5_2.update('hello '.encode('utf-8'))
-md5_2.update('world'.encode('utf-8'))
-print(f"MD5: {md5_2.hexdigest()}")    # 和上面一样
+print("=== 常见哈希算法 ===")
 
-# SHA-1（160位）
-sha1 = hashlib.sha1('hello world'.encode('utf-8'))
-print(f"SHA1: {sha1.hexdigest()}")
+message = "hello world".encode("utf-8")
 
-# SHA-256（256位，推荐）
-sha256 = hashlib.sha256('hello world'.encode('utf-8'))
-print(f"SHA256: {sha256.hexdigest()}")
+# MD5 和 SHA-1 已不适合安全场景，这里只用于认识输出形式。
+print(hashlib.md5(message).hexdigest())
+print(hashlib.sha1(message).hexdigest())
+print(hashlib.sha256(message).hexdigest())
 
-# 用途一：校验文件完整性
-def file_hash(path):
-    sha = hashlib.sha256()
-    with open(path, 'rb') as f:
-        while chunk := f.read(8192):
-            sha.update(chunk)
-    return sha.hexdigest()
 
-# 用途二：存储密码（一定要加盐！）
-import secrets
+print("\n=== 分多次 update 效果相同 ===")
 
-def hash_password(password):
-    salt = secrets.token_hex(16)
-    hashed = hashlib.sha256((salt + password).encode()).hexdigest()
-    return f"{salt}:{hashed}"
+sha_once = hashlib.sha256(b"hello world").hexdigest()
 
-def verify_password(password, stored):
-    salt, hashed = stored.split(':')
-    return hashlib.sha256((salt + password).encode()).hexdigest() == hashed
+sha_chunks = hashlib.sha256()
+sha_chunks.update(b"hello ")
+sha_chunks.update(b"world")
 
-stored = hash_password('mypassword')
-print(f"存储: {stored}")
-print(f"验证正确密码: {verify_password('mypassword', stored)}")
-print(f"验证错误密码: {verify_password('wrong', stored)}")
+print(sha_once)
+print(sha_chunks.hexdigest())
+print(sha_once == sha_chunks.hexdigest())
 
-# 注意：实际项目中用 bcrypt 或 argon2，比 sha256 更安全
+
+print("\n=== 输入稍变，结果完全不同 ===")
+
+# 哈希算法有雪崩效应：输入改 1 个字符，摘要也会大幅变化。
+left = hashlib.sha256(b"hello world").hexdigest()
+right = hashlib.sha256(b"hello worle").hexdigest()
+
+print(left[:16])
+print(right[:16])
+print(left == right)
+
+
+print("\n=== 分块计算文件摘要 ===")
+
+chunks = [b"line 1\n", b"line 2\n", b"line 3\n"]
+file_hash = hashlib.sha256()
+
+# 大文件不要一次性读入内存，应该分块 update。
+for chunk in chunks:
+    file_hash.update(chunk)
+
+print(file_hash.hexdigest())
+
+
+print("\n=== PBKDF2 存储密码摘要 ===")
+
+password = "mypassword"
+salt = bytes.fromhex("00112233445566778899aabbccddeeff")
+iterations = 100_000
+
+# PBKDF2 会反复计算很多轮，比单次 sha256 更适合密码存储。
+password_hash = hashlib.pbkdf2_hmac(
+    "sha256",
+    password.encode("utf-8"),
+    salt,
+    iterations,
+)
+
+stored = f"pbkdf2_sha256${iterations}${salt.hex()}${password_hash.hex()}"
+print(stored)
+
+
+def verify_password(password, stored_text):
+    algorithm, iterations_text, salt_hex, digest_hex = stored_text.split("$")
+    hash_name = algorithm.removeprefix("pbkdf2_")
+    iterations = int(iterations_text)
+    salt = bytes.fromhex(salt_hex)
+    expected = bytes.fromhex(digest_hex)
+
+    actual = hashlib.pbkdf2_hmac(hash_name, password.encode("utf-8"), salt, iterations)
+
+    # compare_digest 用于避免普通字符串比较带来的时序攻击风险。
+    return hmac.compare_digest(actual, expected)
+
+
+print(verify_password("mypassword", stored))
+print(verify_password("wrong-password", stored))
 ```
 
-## 🔍 师兄给你逐行拆
+## 🔍 师兄给你拆开讲
 
-> 代码已经在注释中做了详细说明，这里挑重点讲。
+`hexdigest()` 返回十六进制字符串，适合打印、保存、复制。相同输入永远得到相同摘要；输入稍微变化，摘要就会完全不同，这叫雪崩效应。
 
-### 核心要点
+`update()` 可以多次调用。哈希对象会把每次喂进去的字节连续处理，所以 `update(b"hello ")` 再 `update(b"world")` 和一次性处理 `b"hello world"` 结果相同。
 
-- MD5 已不安全，新项目用 SHA-256
-- 存密码一定要加盐（salt），防止彩虹表攻击
-- 实际项目中用 `bcrypt` 或 `argon2`，比 SHA-256 更适合密码存储
-- 哈希是不可逆的：知道哈希值无法推出原始数据
-- 大文件用 `update()` 分块计算，不用一次读入内存
+文件校验时不要一次性 `read()` 整个大文件，应该循环读取小块并 `update()`。示例用内存里的 `chunks` 模拟文件分块，真实文件也是同一个思路。
+
+密码存储不能用“单次 SHA-256(password)”这种写法。攻击者可以高速尝试大量密码。PBKDF2 会加盐并重复计算很多轮，显著提高爆破成本。真实项目里还可以使用 `bcrypt`、`argon2` 或 Web 框架自带的密码哈希工具。
+
+`hmac.compare_digest()` 用于安全比较摘要，避免普通比较在极端安全场景下泄露比较进度。
 
 ## 🏃 跑一下试试
 
@@ -86,24 +127,53 @@ cd 54-hashlib
 python hashlib_demo.py
 ```
 
-## 💡 师兄的碎碎念
+输出：
 
-- MD5 已不安全，新项目用 SHA-256
-- 存密码一定要加盐（salt），防止彩虹表攻击
-- 实际项目中用 `bcrypt` 或 `argon2`，比 SHA-256 更适合密码存储
-- 哈希是不可逆的：知道哈希值无法推出原始数据
-- 大文件用 `update()` 分块计算，不用一次读入内存
+```text
+=== 常见哈希算法 ===
+5eb63bbbe01eeed093cb22bb8f5acdc3
+2aae6c35c94fcfb415dbe95f408b9ce91ee846ed
+b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9
+
+=== 分多次 update 效果相同 ===
+b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9
+b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9
+True
+
+=== 输入稍变，结果完全不同 ===
+b94d27b9934d3e08
+0fc30e735a0228a3
+False
+
+=== 分块计算文件摘要 ===
+6ca9d5edb68deaadc1d3130c5fc3ec36e12db72ad54e93edcd63bdfb40a83300
+
+=== PBKDF2 存储密码摘要 ===
+pbkdf2_sha256$100000$00112233445566778899aabbccddeeff$6edfb86d00311fe67b02df5f772af20c0fc07e2af4e0789e1baacfafbf8390ba
+True
+False
+```
+
+## 💡 师兄的提醒
+
+MD5、SHA-1 不要再用于安全场景。它们仍可能出现在非安全用途里，比如快速校验、兼容旧系统，但新项目优先用 SHA-256 或更合适的方案。
+
+示例为了输出稳定使用固定 salt。真实项目必须给每个密码生成随机 salt，并把算法、迭代次数、salt、摘要一起保存。
 
 ## 🎓 这一关的知识点清单
 
 | 知识点 | 说明 |
 |--------|------|
-| `hashlib.md5(data)` | 计算 MD5 哈希 |
-| `hashlib.sha256(data)` | 计算 SHA-256 哈希 |
-| `h.hexdigest()` | 获取十六进制哈希值 |
-| `h.update(data)` | 分块更新哈希 |
-| `加盐哈希` | salt + password 一起哈希，防彩虹表 |
+| `hashlib.md5()` | 计算 MD5 摘要，不适合安全场景 |
+| `hashlib.sha1()` | 计算 SHA-1 摘要，不适合安全场景 |
+| `hashlib.sha256()` | 计算 SHA-256 摘要 |
+| `update()` | 分块喂入数据 |
+| `hexdigest()` | 获取十六进制摘要字符串 |
+| 雪崩效应 | 输入微小变化，摘要大幅变化 |
+| `pbkdf2_hmac()` | 标准库提供的密码派生函数 |
+| salt | 每个密码使用的随机盐 |
+| `hmac.compare_digest()` | 更安全地比较摘要 |
 
 ## ➡️ 下一关
 
-下一关我们学习 [itertools](../55-itertools/README.md)，继续加油！
+下一关：[itertools](../55-itertools/README.md)。

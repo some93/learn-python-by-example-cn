@@ -2,67 +2,59 @@
 
 import unittest
 
-# 被测试的代码
-class Dict(dict):
-    """支持属性访问的字典"""
+
+class AttrDict(dict):
+    """支持属性访问的字典。"""
+
     def __getattr__(self, key):
         try:
+            # 让 data.a 等价于 data["a"]。
             return self[key]
-        except KeyError:
-            raise AttributeError(f"'Dict' 没有属性 '{key}'")
+        except KeyError as exc:
+            # 属性访问失败时应该抛 AttributeError，而不是 KeyError。
+            raise AttributeError(f"'AttrDict' 没有属性 '{key}'") from exc
 
     def __setattr__(self, key, value):
+        # 让 data.a = 1 等价于 data["a"] = 1。
         self[key] = value
 
-# 测试类
-class TestDict(unittest.TestCase):
-    # setUp：每个测试方法前执行
+
+class TestAttrDict(unittest.TestCase):
     def setUp(self):
-        self.d = Dict(a=1, b=2)
+        # 每个测试方法执行前都会重新准备一份数据。
+        self.data = AttrDict(a=1, b="test")
 
-    # tearDown：每个测试方法后执行
     def tearDown(self):
-        pass
+        # 每个测试方法执行后都会清理，避免测试之间互相影响。
+        self.data.clear()
 
-    # 测试方法必须以 test_ 开头
     def test_init(self):
-        d = Dict(a=1, b='test')
-        self.assertEqual(d.a, 1)
-        self.assertEqual(d.b, 'test')
-        self.assertTrue(isinstance(d, dict))
+        self.assertEqual(self.data.a, 1)
+        self.assertEqual(self.data.b, "test")
+        self.assertIsInstance(self.data, dict)
 
-    def test_key(self):
-        self.assertEqual(self.d['a'], 1)
+    def test_key_access(self):
+        self.assertEqual(self.data["a"], 1)
+        self.assertIn("b", self.data)
 
-    def test_attr(self):
-        self.assertEqual(self.d.a, 1)
-
-    def test_keyerror(self):
-        with self.assertRaises(KeyError):
-            _ = self.d['empty']
-
-    def test_attrerror(self):
-        with self.assertRaises(AttributeError):
-            _ = self.d.empty
+    def test_attr_access(self):
+        self.assertEqual(self.data.a, 1)
 
     def test_setattr(self):
-        self.d.c = 3
-        self.assertEqual(self.d.c, 3)
-        self.assertEqual(self.d['c'], 3)
+        self.data.c = 3
+        self.assertEqual(self.data.c, 3)
+        self.assertEqual(self.data["c"], 3)
 
-# 常用断言方法
-# assertEqual(a, b)      a == b
-# assertNotEqual(a, b)   a != b
-# assertTrue(x)          bool(x) is True
-# assertFalse(x)         bool(x) is False
-# assertRaises(Error)    抛出指定异常
-# assertIn(a, b)         a in b
-# assertIsNone(x)        x is None
+    def test_key_error(self):
+        # assertRaises 用来验证代码确实抛出了预期异常。
+        with self.assertRaises(KeyError):
+            _ = self.data["missing"]
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_attr_error(self):
+        with self.assertRaises(AttributeError):
+            _ = self.data.missing
 
-# 运行测试的方式：
-# python unit-testing.py
-# python -m unittest unit-testing
-# python -m pytest（需安装 pytest）
+
+if __name__ == "__main__":
+    # verbosity=2 会显示每个测试方法的名字和结果。
+    unittest.main(verbosity=2)

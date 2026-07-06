@@ -1,59 +1,93 @@
 # @property
 
-# 直接暴露属性没有参数检查
+
+print("=== 直接暴露属性的问题 ===")
+
+
 class BadStudent:
     pass
 
-s = BadStudent()
-s.score = 9999   # 没有检查，可以随便设
 
-# 用 getter/setter 方法能检查，但调用不方便
+bad = BadStudent()
+# 直接暴露属性时，外部可以写入明显不合理的值。
+bad.score = 9999
+print(bad.score)
+
+
+print("\n=== 老式 getter/setter ===")
+
+
 class OldStudent:
     def get_score(self):
         return self._score
 
     def set_score(self, value):
+        # getter/setter 可以校验数据，但调用方式比较啰嗦。
         if not isinstance(value, int):
-            raise ValueError('分数必须是整数')
+            raise ValueError("分数必须是整数")
         if value < 0 or value > 100:
-            raise ValueError('分数必须在 0-100 之间')
+            raise ValueError("分数必须在 0-100 之间")
         self._score = value
 
-# 用 @property 两全其美！
+
+old = OldStudent()
+old.set_score(88)
+print(old.get_score())
+
+
+print("\n=== @property 读写属性 ===")
+
+
 class Student:
     @property
     def score(self):
+        # @property 让方法像属性一样读取。
         return self._score
 
     @score.setter
     def score(self, value):
+        # setter 保留校验能力，同时调用方式变成 student.score = ...
         if not isinstance(value, int):
-            raise ValueError('分数必须是整数')
+            raise ValueError("分数必须是整数")
         if value < 0 or value > 100:
-            raise ValueError('分数必须在 0-100 之间')
+            raise ValueError("分数必须在 0-100 之间")
         self._score = value
 
-s = Student()
-s.score = 88      # 像属性一样赋值，实际调用 setter
-print(s.score)     # 像属性一样读取，实际调用 getter
 
-# s.score = 9999  # ValueError!
+student = Student()
+student.score = 90
+print(student.score)
 
-# 只读属性：只定义 getter，不定义 setter
+try:
+    student.score = 120
+except ValueError as error:
+    print(error)
+
+
+print("\n=== 只读属性和计算属性 ===")
+
+
 class Person:
-    def __init__(self, birth_year):
+    def __init__(self, birth_year, current_year):
         self._birth_year = birth_year
+        self._current_year = current_year
 
     @property
     def birth_year(self):
+        # 只定义 getter，没有 setter，就是只读属性。
         return self._birth_year
 
     @property
     def age(self):
-        import datetime
-        return datetime.datetime.now().year - self._birth_year
+        # 计算属性不一定需要真实存储在对象里。
+        return self._current_year - self._birth_year
 
-p = Person(2000)
-print(p.age)          # 根据当前年份计算
-# p.age = 30          # AttributeError! 只读属性
-print(p.birth_year)   # 2000
+
+person = Person(2000, 2026)
+print(person.birth_year)
+print(person.age)
+
+try:
+    person.age = 30
+except AttributeError as error:
+    print(type(error).__name__)

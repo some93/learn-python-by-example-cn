@@ -1,60 +1,71 @@
 # 调试
 
-# 方法一：print()（最简单但最原始）
+import logging
+import sys
+
+
+print("=== print 调试 ===")
+
+
 def calc(a, b):
-    print(f"DEBUG: a={a}, b={b}")   # 调试用
+    # print 调试最直接，但临时输出多了以后很难管理。
+    print(f"DEBUG: a={a}, b={b}")
     return a + b
 
-calc(1, 2)
 
-# 方法二：assert（断言）
+print(calc(1, 2))
+
+
+print("\n=== assert 断言 ===")
+
+
 def div(a, b):
-    assert b != 0, "除数不能为零！"
+    # assert 适合表达“开发阶段必须成立”的条件。
+    assert b != 0, "除数不能为零"
     return a / b
 
+
 print(div(10, 2))
-# div(10, 0)   # AssertionError: 除数不能为零！
 
-# 启动时可以关闭 assert：python -O debugging.py
+try:
+    div(10, 0)
+except AssertionError as error:
+    print(type(error).__name__, error)
 
-# 方法三：logging（推荐！）
-import logging
-logging.basicConfig(level=logging.DEBUG)
 
-logging.debug("这是 debug 信息")
-logging.info("这是 info 信息")
-logging.warning("这是 warning 信息")
-logging.error("这是 error 信息")
+print("\n=== logging 日志 ===")
 
-# 日志级别：DEBUG < INFO < WARNING < ERROR < CRITICAL
-# 设置 level=logging.INFO 就不会输出 DEBUG 级别的信息
+logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(message)s", stream=sys.stdout)
+logger = logging.getLogger("debugging-demo")
 
-# 方法四：pdb（交互式调试器）
-# import pdb
-# pdb.set_trace()    # 在这里设断点
+# 当前日志级别是 INFO，所以 DEBUG 不会显示。
+logger.debug("这条 DEBUG 不会显示")
+logger.info("开始处理")
+logger.warning("发现可疑数据")
+logger.error("发生错误")
 
-# pdb 常用命令：
-# l (list)     查看代码
-# n (next)     下一步
-# p 变量名      打印变量
-# c (continue) 继续执行
-# q (quit)     退出
 
-# 方法五：IDE 调试（最方便）
-# VSCode、PyCharm 都支持可视化断点调试
+print("\n=== 用 logging 处理数据 ===")
 
-# 实际项目中的 logging 配置
-logger = logging.getLogger(__name__)
 
 def process_data(data):
-    logger.info(f"开始处理数据，共 {len(data)} 条")
+    logger.info("开始处理 %d 条数据", len(data))
     result = []
     for item in data:
         try:
+            # 每条数据单独处理，坏数据不会影响后续数据。
             result.append(int(item))
         except ValueError:
-            logger.warning(f"无法转换: {item}")
-    logger.info(f"处理完成，成功 {len(result)} 条")
+            # 日志里带上失败项，方便之后排查。
+            logger.warning("无法转换: %s", item)
+    logger.info("处理完成，成功 %d 条", len(result))
     return result
 
-process_data(['1', '2', 'abc', '4', 'xyz'])
+
+print(process_data(["1", "2", "abc", "4"]))
+
+
+print("\n=== pdb 和 IDE 调试 ===")
+
+print("pdb.set_trace() 可以设置命令行断点")
+print("VSCode / PyCharm 可以设置可视化断点")

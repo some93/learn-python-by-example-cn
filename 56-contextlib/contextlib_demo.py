@@ -1,59 +1,61 @@
-# contextlib
+# contextlib 上下文管理工具
 
-from contextlib import contextmanager, closing
+from contextlib import ExitStack, closing, contextmanager, redirect_stdout, suppress
+from io import StringIO
 
-# 回顾：with 语句需要上下文管理器（__enter__ + __exit__）
-class MyResource:
+
+print("=== 手写上下文管理器 ===")
+
+
+class Resource:
+    def __init__(self, name):
+        self.name = name
+
     def __enter__(self):
-        print("打开资源")
+        # __enter__ 的返回值会绑定给 as 后面的变量。
+        print(f"打开 {self.name}")
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        print("关闭资源")
-        return False    # 不吞掉异常
+    def __exit__(self, exc_type, exc_value, traceback):
+        # __exit__ 无论 with 内部是否异常都会执行。
+        print(f"关闭 {self.name}")
+        return False
 
-with MyResource() as r:
-    print("使用资源")
 
-# 用 @contextmanager 简化！
+with Resource("文件") as resource:
+    print(f"使用 {resource.name}")
+
+
+print("\n=== @contextmanager 简化写法 ===")
+
+
 @contextmanager
-def my_resource():
-    print("打开资源")
+def managed_resource(name):
+    print(f"打开 {name}")
     try:
-        yield "资源对象"    # yield 之前是 __enter__
+        # yield 之前相当于 __enter__，yield 的值会交给 as 变量。
+        yield name
     finally:
-        print("关闭资源")    # yield 之后是 __exit__
+        # finally 里的代码相当于 __exit__，负责清理资源。
+        print(f"关闭 {name}")
 
-with my_resource() as r:
-    print(f"使用: {r}")
 
-# 实用例子：计时器
-import time
+with managed_resource("数据库连接") as name:
+    print(f"使用 {name}")
 
-@contextmanager
-def timer(name):
-    start = time.time()
-    yield
-    elapsed = time.time() - start
-    print(f"{name} 耗时: {elapsed:.3f}s")
 
-with timer("计算"):
-    total = sum(range(1000000))
-    print(f"结果: {total}")
+print("\n=== suppress 忽略指定异常 ===")
 
-# 实用例子：临时修改工作目录
-import os
+with suppress(ValueError):
+    # 只忽略指定异常，适合“失败也没关系”的小范围代码。
+    int("not-a-number")
 
-@contextmanager
-def change_dir(path):
-    old_dir = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(old_dir)
+print("程序继续执行")
 
-# closing()：为没有 __exit__ 的对象加上 close() 调用
+
+print("\n=== closing 自动调用 close() ===")
+
+
 class Connection:
     def __init__(self):
         print("连接已建立")
@@ -61,6 +63,30 @@ class Connection:
     def close(self):
         print("连接已关闭")
 
-with closing(Connection()) as conn:
-    print("使用连接")
-# 自动调用 conn.close()
+
+with closing(Connection()) as connection:
+    print(type(connection).__name__)
+
+
+print("\n=== redirect_stdout 捕获输出 ===")
+
+buffer = StringIO()
+
+# redirect_stdout 临时把 print 输出重定向到 file-like object。
+with redirect_stdout(buffer):
+    print("第一行")
+    print("第二行")
+
+print(buffer.getvalue().splitlines())
+
+
+print("\n=== ExitStack 管理多个资源 ===")
+
+with ExitStack() as stack:
+    # enter_context 可以动态进入多个上下文管理器。
+    first = stack.enter_context(managed_resource("缓存"))
+    second = stack.enter_context(managed_resource("日志"))
+    print(f"使用 {first} 和 {second}")
+
+# ExitStack 退出时会按后进先出的顺序清理资源。
+print("全部资源已释放")

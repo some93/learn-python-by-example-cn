@@ -1,16 +1,19 @@
-# 第 59 关：UDP编程（师兄带你学 Python）
+# 第 59 关：UDP 编程（师兄带你学 Python）
 
 ## 🎯 这一关你会学到
 
-- 理解 UDP 和 TCP 的区别
-- 用 `socket` 编写 UDP 服务器/客户端
-- 了解 UDP 的适用场景
+- UDP 和 TCP 的核心区别
+- 如何用 `SOCK_DGRAM` 创建 UDP socket
+- `sendto()` / `recvfrom()` 如何收发数据报
+- 为什么 UDP 不需要 `listen()` / `accept()`
+- UDP 的数据报边界和超时处理
+- UDP 适合哪些场景，不适合哪些场景
 
 ## 🤔 先想一个问题
 
-TCP 像打电话（可靠但慢），UDP 像发短信（快但可能丢）。视频通话、在线游戏、DNS 查询……这些场景速度比可靠性更重要，所以用 **UDP**。
+如果 TCP 像打电话，UDP 更像寄明信片：不需要先建立连接，直接把数据发出去。速度快、开销小，但不保证一定到达，也不保证顺序。
 
-带着这个问题，我们来看代码。
+DNS 查询、视频通话、在线游戏位置同步常用 UDP，因为它们更看重低延迟。偶尔丢一帧画面，比等到画面卡住更能接受。
 
 ## 📖 看代码
 
@@ -19,62 +22,80 @@ TCP 像打电话（可靠但慢），UDP 像发短信（快但可能丢）。视
 
 import socket
 import threading
+from queue import Queue
 
-# ===== UDP 服务器 =====
-def udp_server():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.bind(('127.0.0.1', 9998))
-    print("[UDP服务器] 等待数据...")
 
-    for _ in range(3):
-        data, addr = s.recvfrom(1024)
-        print(f"[UDP服务器] 收到来自 {addr}: {data.decode('utf-8')}")
-        s.sendto(f"收到: {data.decode('utf-8')}".encode('utf-8'), addr)
+def udp_server(port_queue, server_logs):
+    # SOCK_DGRAM 表示 UDP，UDP 不需要 listen/accept。
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server:
+        server.bind(("127.0.0.1", 0))
+        server.settimeout(3)
 
-    s.close()
+        port = server.getsockname()[1]
+        port_queue.put(port)
 
-# ===== UDP 客户端 =====
-def udp_client():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        for _ in range(3):
+            # recvfrom 每次收到一个完整数据报，同时拿到发送方地址。
+            data, address = server.recvfrom(1024)
+            message = data.decode("utf-8")
+            server_logs.put(f"服务器收到: {message}")
 
-    for msg in ['Hello', 'World', 'UDP']:
-        s.sendto(msg.encode('utf-8'), ('127.0.0.1', 9998))
-        data, addr = s.recvfrom(1024)
-        print(f"[UDP客户端] 响应: {data.decode('utf-8')}")
+            reply = f"ACK: {message}".encode("utf-8")
+            server.sendto(reply, address)
 
-    s.close()
 
-if __name__ == '__main__':
-    import time
+def udp_client(port):
+    responses = []
 
-    server = threading.Thread(target=udp_server)
-    server.start()
-    time.sleep(0.5)
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as client:
+        client.settimeout(3)
+        server_address = ("127.0.0.1", port)
 
-    client = threading.Thread(target=udp_client)
-    client.start()
+        for message in ["Hello", "World", "UDP"]:
+            # UDP 无连接，直接把数据报发给目标地址。
+            client.sendto(message.encode("utf-8"), server_address)
 
-    server.join()
-    client.join()
-    print("UDP 通信完成！")
+            data, _address = client.recvfrom(1024)
+            responses.append(data.decode("utf-8"))
 
-# TCP vs UDP：
-# TCP：面向连接、可靠、有序、速度慢
-# UDP：无连接、不可靠、无序、速度快
-# UDP 适合：视频通话、游戏、DNS 查询等
+    return responses
+
+
+if __name__ == "__main__":
+    port_queue = Queue()
+    server_logs = Queue()
+
+    server_thread = threading.Thread(target=udp_server, args=(port_queue, server_logs))
+    server_thread.start()
+
+    # 等服务器绑定端口后，客户端再开始发送。
+    port = port_queue.get()
+    responses = udp_client(port)
+
+    server_thread.join()
+
+    print("=== UDP 客户端响应 ===")
+    for response in responses:
+        print(response)
+
+    print("\n=== UDP 服务器处理结果 ===")
+    while not server_logs.empty():
+        print(server_logs.get())
+
+    print("\nUDP 通信完成")
 ```
 
-## 🔍 师兄给你逐行拆
+## 🔍 师兄给你拆开讲
 
-> 代码已经在注释中做了详细说明，这里挑重点讲。
+`socket.SOCK_DGRAM` 表示 UDP。UDP 没有连接建立过程，所以服务端不需要 `listen()` 和 `accept()`，客户端也不需要 `connect()`，直接 `sendto(data, address)`。
 
-### 核心要点
+`recvfrom()` 返回两个值：收到的数据和发送方地址。因为 UDP 无连接，服务端要靠这个地址知道该回复给谁。
 
-- UDP 不需要 connect，直接 sendto/recvfrom
-- `SOCK_DGRAM` 表示 UDP（TCP 是 `SOCK_STREAM`）
-- UDP 不保证数据到达，也不保证顺序
-- UDP 没有 listen/accept 步骤，比 TCP 简单
-- DNS 查询、视频流、游戏同步等场景常用 UDP
+和 TCP 字节流不同，UDP 保留数据报边界。客户端 `sendto()` 一次发出一个数据报，服务端 `recvfrom()` 一次收到一个数据报。这个边界是 UDP 的优势之一。
+
+但 UDP 不可靠。数据可能丢失、重复、乱序。示例里用 `settimeout(3)` 避免收不到响应时永远卡住。真实项目如果需要可靠性，要自己加序号、重试、确认机制，或者直接选择 TCP。
+
+端口传 `0` 表示系统自动分配空闲端口，避免教程示例和本机已有服务冲突。
 
 ## 🏃 跑一下试试
 
@@ -83,23 +104,41 @@ cd 59-udp-programming
 python udp-programming.py
 ```
 
-## 💡 师兄的碎碎念
+输出：
 
-- UDP 不需要 connect，直接 sendto/recvfrom
-- `SOCK_DGRAM` 表示 UDP（TCP 是 `SOCK_STREAM`）
-- UDP 不保证数据到达，也不保证顺序
-- UDP 没有 listen/accept 步骤，比 TCP 简单
-- DNS 查询、视频流、游戏同步等场景常用 UDP
+```text
+=== UDP 客户端响应 ===
+ACK: Hello
+ACK: World
+ACK: UDP
+
+=== UDP 服务器处理结果 ===
+服务器收到: Hello
+服务器收到: World
+服务器收到: UDP
+
+UDP 通信完成
+```
+
+## 💡 师兄的提醒
+
+简单说：需要可靠、有序、完整传输，优先 TCP；需要低延迟、能接受少量丢包，才考虑 UDP。
+
+UDP 常见在 DNS、音视频、游戏同步、局域网广播发现等场景。普通 Web API、数据库连接、文件传输通常不会直接用 UDP。
 
 ## 🎓 这一关的知识点清单
 
 | 知识点 | 说明 |
 |--------|------|
-| `socket.socket(AF_INET, SOCK_DGRAM)` | 创建 UDP socket |
-| `s.sendto(data, addr)` | 发送数据到指定地址 |
-| `s.recvfrom(bufsize)` | 接收数据和来源地址 |
-| `TCP vs UDP` | 可靠有序 vs 快速无连接 |
+| `SOCK_DGRAM` | UDP socket 类型 |
+| `bind()` | 服务端绑定本地地址 |
+| `sendto(data, addr)` | 发送 UDP 数据报 |
+| `recvfrom(size)` | 接收数据报和发送方地址 |
+| `settimeout()` | 设置收发超时，避免卡死 |
+| 数据报边界 | UDP 一次发送对应一个数据报 |
+| 无连接 | UDP 不需要 `connect/listen/accept` |
+| 不可靠 | 不保证到达、顺序、唯一 |
 
 ## ➡️ 下一关
 
-下一关我们学习 [使用SQLite](../60-database-sqlite/README.md)，继续加油！
+下一关：[使用 SQLite](../60-database-sqlite/README.md)。

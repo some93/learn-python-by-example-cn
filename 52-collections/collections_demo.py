@@ -1,56 +1,104 @@
-# collections 模块
+# collections 常用数据结构
 
-from collections import namedtuple, deque, defaultdict, OrderedDict, Counter
+from collections import ChainMap, Counter, OrderedDict, defaultdict, deque, namedtuple
 
-# namedtuple：给元组里的元素起名字
-Point = namedtuple('Point', ['x', 'y'])
-p = Point(1, 2)
-print(p.x, p.y)        # 1 2
-print(isinstance(p, tuple))    # True（它就是元组！）
 
-# 用 namedtuple 表示坐标、颜色等
-Color = namedtuple('Color', ['red', 'green', 'blue'])
-white = Color(255, 255, 255)
-print(white.red)    # 255
+print("=== namedtuple：轻量数据对象 ===")
 
-# deque：双端队列（高效的头部操作）
-dq = deque([1, 2, 3])
-dq.appendleft(0)     # 头部插入
-dq.append(4)          # 尾部插入
-print(dq)             # deque([0, 1, 2, 3, 4])
-dq.popleft()          # 头部弹出
-print(dq)             # deque([1, 2, 3, 4])
+# namedtuple 还是元组，但字段有名字，比 p[0] / p[1] 更清楚。
+Point = namedtuple("Point", ["x", "y"])
+point = Point(3, 4)
 
-# list 的头部操作是 O(n)，deque 是 O(1)
+print(point)
+print(point.x, point.y)
+print(isinstance(point, tuple))
+print(point._asdict())
 
-# defaultdict：带默认值的字典
-dd = defaultdict(lambda: 'N/A')
-dd['name'] = 'Alice'
-print(dd['name'])     # Alice
-print(dd['score'])    # N/A（普通 dict 会 KeyError）
 
-# 常见用法：统计分组
-words = ['apple', 'banana', 'apple', 'cherry', 'banana', 'apple']
+print("\n=== deque：双端队列 ===")
+
+# deque 两端 append/pop 都很快，适合队列、栈、最近记录。
+queue = deque(["task-1", "task-2"])
+queue.append("task-3")
+queue.appendleft("urgent")
+
+print(list(queue))
+print(queue.popleft())
+print(queue.pop())
+print(list(queue))
+
+# maxlen 可以固定长度，自动丢掉最旧的数据。
+recent_pages = deque(maxlen=3)
+for page in ["home", "search", "detail", "cart"]:
+    recent_pages.append(page)
+print(list(recent_pages))
+
+
+print("\n=== defaultdict：自动创建默认值 ===")
+
+scores = [
+    ("一班", "Alice", 92),
+    ("二班", "Bob", 85),
+    ("一班", "Charlie", 78),
+]
+
+# defaultdict(list) 常用于按 key 分组。
+students_by_class = defaultdict(list)
+for class_name, name, score in scores:
+    students_by_class[class_name].append((name, score))
+
+print(dict(students_by_class))
+
+# defaultdict(int) 常用于计数，不需要先判断 key 是否存在。
 word_count = defaultdict(int)
-for w in words:
-    word_count[w] += 1
-print(dict(word_count))    # {'apple': 3, 'banana': 2, 'cherry': 1}
+for word in ["python", "java", "python", "go", "python"]:
+    word_count[word] += 1
+print(dict(word_count))
 
-# Counter：计数器（更简洁的统计）
-c = Counter(words)
-print(c)                       # Counter({'apple': 3, 'banana': 2, 'cherry': 1})
-print(c.most_common(2))        # [('apple', 3), ('banana', 2)]
 
-# Counter 也能统计字符串
-print(Counter('programming'))   # Counter({'r': 2, 'g': 2, 'm': 2, ...})
+print("\n=== Counter：专门用来计数 ===")
 
-# OrderedDict：记住插入顺序的字典
-# Python 3.7+ 普通 dict 也保持插入顺序了
-# OrderedDict 的特殊之处：两个 OrderedDict 比较时顺序也参与
-od1 = OrderedDict([('a', 1), ('b', 2)])
-od2 = OrderedDict([('b', 2), ('a', 1)])
-print(od1 == od2)    # False（顺序不同）
+words = ["apple", "banana", "apple", "cherry", "banana", "apple"]
+counter = Counter(words)
 
-d1 = {'a': 1, 'b': 2}
-d2 = {'b': 2, 'a': 1}
-print(d1 == d2)      # True（普通 dict 不比较顺序）
+print(counter)
+print(counter.most_common(2))
+
+counter.update(["banana", "durian"])
+print(counter)
+
+counter.subtract(["apple", "durian"])
+print(counter)
+
+
+print("\n=== OrderedDict：顺序敏感的字典 ===")
+
+left = OrderedDict([("a", 1), ("b", 2)])
+right = OrderedDict([("b", 2), ("a", 1)])
+
+# OrderedDict 比较时会考虑顺序，普通 dict 不会。
+print(left == right)
+print({"a": 1, "b": 2} == {"b": 2, "a": 1})
+
+cache = OrderedDict()
+for key in ["home", "search", "detail"]:
+    cache[key] = f"page:{key}"
+
+# move_to_end 可以把刚访问的 key 移到末尾，常用于 LRU 缓存。
+cache.move_to_end("home")
+print(list(cache.keys()))
+
+
+print("\n=== ChainMap：合并多个配置来源 ===")
+
+cli_args = {"debug": True}
+env_vars = {"host": "127.0.0.1", "port": 9000}
+defaults = {"host": "0.0.0.0", "port": 8000, "debug": False}
+
+# ChainMap 查找时从左到右，前面的配置优先级更高。
+config = ChainMap(cli_args, env_vars, defaults)
+
+print(config["debug"])
+print(config["host"])
+print(config["port"])
+print(config.maps)

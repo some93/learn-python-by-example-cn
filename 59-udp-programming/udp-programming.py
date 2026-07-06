@@ -2,46 +2,64 @@
 
 import socket
 import threading
+from queue import Queue
 
-# ===== UDP 服务器 =====
-def udp_server():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.bind(('127.0.0.1', 9998))
-    print("[UDP服务器] 等待数据...")
 
-    for _ in range(3):
-        data, addr = s.recvfrom(1024)
-        print(f"[UDP服务器] 收到来自 {addr}: {data.decode('utf-8')}")
-        s.sendto(f"收到: {data.decode('utf-8')}".encode('utf-8'), addr)
+def udp_server(port_queue, server_logs):
+    # SOCK_DGRAM 表示 UDP，UDP 不需要 listen/accept。
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server:
+        server.bind(("127.0.0.1", 0))
+        server.settimeout(3)
 
-    s.close()
+        port = server.getsockname()[1]
+        port_queue.put(port)
 
-# ===== UDP 客户端 =====
-def udp_client():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        for _ in range(3):
+            # recvfrom 每次收到一个完整数据报，同时拿到发送方地址。
+            data, address = server.recvfrom(1024)
+            message = data.decode("utf-8")
+            server_logs.put(f"服务器收到: {message}")
 
-    for msg in ['Hello', 'World', 'UDP']:
-        s.sendto(msg.encode('utf-8'), ('127.0.0.1', 9998))
-        data, addr = s.recvfrom(1024)
-        print(f"[UDP客户端] 响应: {data.decode('utf-8')}")
+            reply = f"ACK: {message}".encode("utf-8")
+            server.sendto(reply, address)
 
-    s.close()
 
-if __name__ == '__main__':
-    import time
+def udp_client(port):
+    responses = []
 
-    server = threading.Thread(target=udp_server)
-    server.start()
-    time.sleep(0.5)
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as client:
+        client.settimeout(3)
+        server_address = ("127.0.0.1", port)
 
-    client = threading.Thread(target=udp_client)
-    client.start()
+        for message in ["Hello", "World", "UDP"]:
+            # UDP 无连接，直接把数据报发给目标地址。
+            client.sendto(message.encode("utf-8"), server_address)
 
-    server.join()
-    client.join()
-    print("UDP 通信完成！")
+            data, _address = client.recvfrom(1024)
+            responses.append(data.decode("utf-8"))
 
-# TCP vs UDP：
-# TCP：面向连接、可靠、有序、速度慢
-# UDP：无连接、不可靠、无序、速度快
-# UDP 适合：视频通话、游戏、DNS 查询等
+    return responses
+
+
+if __name__ == "__main__":
+    port_queue = Queue()
+    server_logs = Queue()
+
+    server_thread = threading.Thread(target=udp_server, args=(port_queue, server_logs))
+    server_thread.start()
+
+    # 等服务器绑定端口后，客户端再开始发送。
+    port = port_queue.get()
+    responses = udp_client(port)
+
+    server_thread.join()
+
+    print("=== UDP 客户端响应 ===")
+    for response in responses:
+        print(response)
+
+    print("\n=== UDP 服务器处理结果 ===")
+    while not server_logs.empty():
+        print(server_logs.get())
+
+    print("\nUDP 通信完成")

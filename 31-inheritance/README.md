@@ -2,110 +2,327 @@
 
 ## 🎯 这一关你会学到
 
-- 理解类的继承机制
-- 掌握方法重写（Override）
-- 理解多态的概念和优势
-- 了解 Python 的鸭子类型
+- `class Dog(Animal)` 的继承语法
+- 子类如何重写父类方法
+- `super()` 如何调用父类初始化逻辑
+- `isinstance()` 和 `issubclass()` 如何判断继承关系
+- 多态和鸭子类型在 Python 里的意义
 
 ## 🤔 先想一个问题
 
-你开了一家宠物店，有狗、猫、乌龟。每种动物都会「跑」，但跑的方式不一样。你会给每种动物单独写一套代码吗？还是让它们共享一个「动物」模板，各自改改就行？这就是**继承和多态**。
+你开了一家宠物店，有狗、猫、乌龟。它们都是动物，都有名字，也都会“动起来”，但动的方式不同。
 
-带着这个问题，我们来看代码。
+如果每种动物都从零写一遍，会很重复。更自然的做法是先定义一个通用的 `Animal`，再让 `Dog`、`Cat`、`Tortoise` 继承它，各自改写自己的行为。
+
+这就是继承和多态：**共用一套基础能力，同时允许不同子类表现出不同动作**。
 
 ## 📖 看代码
 
 ```python
 # 继承和多态
 
-# 定义基类
-class Animal:
-    def run(self):
-        print("Animal is running...")
 
-# 继承 Animal
+print("=== 继承和方法重写 ===")
+
+
+class Animal:
+    def __init__(self, name):
+        self.name = name
+
+    def run(self):
+        # 父类提供通用行为，子类可以继承或重写。
+        print(f"{self.name} is running...")
+
+
 class Dog(Animal):
     def run(self):
-        print("Dog is running...")
+        # 子类定义同名方法，会覆盖父类方法。
+        print(f"{self.name} is running fast...")
+
 
 class Cat(Animal):
     def run(self):
-        print("Cat is running...")
+        print(f"{self.name} is walking quietly...")
 
-# 创建实例
-dog = Dog()
-cat = Cat()
-dog.run()    # Dog is running...
-cat.run()    # Cat is running...
 
-# 子类也是父类的实例
-print(isinstance(dog, Dog))      # True
-print(isinstance(dog, Animal))   # True
+dog = Dog("旺财")
+cat = Cat("咪咪")
+dog.run()
+cat.run()
 
-# 多态：不同子类调用同一方法，行为不同
-def run_twice(animal):
-    animal.run()
-    animal.run()
 
-run_twice(Dog())    # Dog is running... × 2
-run_twice(Cat())    # Cat is running... × 2
+print("\n=== super() 调用父类方法 ===")
 
-# 新增一个子类，run_twice 不用改！
+
 class Tortoise(Animal):
+    def __init__(self, name, speed):
+        # super() 调用父类 __init__，避免重复初始化 name。
+        super().__init__(name)
+        self.speed = speed
+
     def run(self):
-        print("Tortoise is running slowly...")
+        print(f"{self.name} is running slowly at {self.speed} m/s...")
 
-run_twice(Tortoise())
 
-# Python 的鸭子类型：不要求继承，只要有 run 方法就行
+tortoise = Tortoise("龟仙人", 0.2)
+tortoise.run()
+
+
+print("\n=== isinstance 和 issubclass ===")
+
+# 子类实例同时也是父类实例。
+print(isinstance(dog, Dog))
+print(isinstance(dog, Animal))
+print(isinstance(dog, Cat))
+print(issubclass(Dog, Animal))
+print(issubclass(Dog, object))
+
+
+print("\n=== 多态 ===")
+
+
+def run_twice(animal):
+    # 只关心对象有没有 run()，不关心它具体是什么类。
+    animal.run()
+    animal.run()
+
+
+run_twice(Dog("小黑"))
+run_twice(Cat("小花"))
+run_twice(Tortoise("慢慢", 0.1))
+
+
+print("\n=== 鸭子类型 ===")
+
+
 class Timer:
     def run(self):
+        # Timer 没有继承 Animal，但有 run()，也能被 run_twice 使用。
         print("Timer is ticking...")
 
-run_twice(Timer())  # 也能跑！
 
-# 判断继承关系
-print(issubclass(Dog, Animal))   # True
-print(issubclass(Dog, object))   # True（所有类都继承自 object）
+run_twice(Timer())
 ```
 
 ## 🔍 师兄给你逐行拆
 
-> 代码已经在注释中做了详细说明，这里挑重点讲。
+### `class Dog(Animal)` —— 子类继承父类
 
-### 核心要点
+```python
+class Animal:
+    def __init__(self, name):
+        self.name = name
 
-- Python 所有类都默认继承 `object`，不写也是
-- 方法重写就是子类重新定义父类的同名方法
-- Python 是鸭子类型：不在乎你是不是 Animal 的子类，只要你有 `run()` 方法就行
-- 多态的好处：写通用代码，不用关心具体类型，新增子类不用改老代码
-- `isinstance()` 能识别继承链，`type()` 只看精确类型
+    def run(self):
+        print(f"{self.name} is running...")
+
+
+class Dog(Animal):
+    def run(self):
+        print(f"{self.name} is running fast...")
+```
+
+**这行在干嘛？**
+
+`Animal` 是父类，也叫基类。`Dog(Animal)` 表示 `Dog` 继承 `Animal`。
+
+`Dog` 没有自己写 `__init__()`，所以会继承 `Animal.__init__()`。因此你可以写：
+
+```python
+dog = Dog("旺财")
+```
+
+`旺财` 会被保存到 `self.name`。
+
+**为什么要继承？**
+
+因为 `name` 这种通用属性，动物都有。放在父类里，子类就不用重复写。
+
+---
+
+### 方法重写：同名方法，子类说了算
+
+```python
+class Dog(Animal):
+    def run(self):
+        print(f"{self.name} is running fast...")
+
+
+class Cat(Animal):
+    def run(self):
+        print(f"{self.name} is walking quietly...")
+```
+
+**这行在干嘛？**
+
+`Animal` 里已经有 `run()`，但 `Dog` 和 `Cat` 又定义了自己的 `run()`。这叫方法重写，也叫 override。
+
+调用：
+
+```python
+dog.run()
+cat.run()
+```
+
+Python 会优先找子类自己的方法，所以狗和猫的输出不同。
+
+**生活类比**
+
+父类规定“动物会移动”，但狗说“我跑得快”，猫说“我走得轻”。动作名都叫 `run()`，具体表现由子类决定。
+
+---
+
+### `super()` —— 复用父类初始化
+
+```python
+class Tortoise(Animal):
+    def __init__(self, name, speed):
+        super().__init__(name)
+        self.speed = speed
+```
+
+**这行在干嘛？**
+
+`Tortoise` 需要 `name`，还额外需要 `speed`。名字初始化逻辑父类已经写好了，所以用：
+
+```python
+super().__init__(name)
+```
+
+调用父类的 `__init__()`，再给自己增加 `speed`。
+
+**为什么不用手写 `self.name = name`？**
+
+简单例子里手写也行，但真实父类初始化可能做很多事。用 `super()` 能复用父类逻辑，减少重复，也方便父类以后修改。
+
+---
+
+### `isinstance()` 和 `issubclass()`
+
+```python
+print(isinstance(dog, Dog))
+print(isinstance(dog, Animal))
+print(isinstance(dog, Cat))
+print(issubclass(Dog, Animal))
+print(issubclass(Dog, object))
+```
+
+**这行在干嘛？**
+
+`isinstance(dog, Dog)` 是 `True`，因为 `dog` 是 `Dog` 实例。
+
+`isinstance(dog, Animal)` 也是 `True`，因为 `Dog` 继承自 `Animal`。
+
+`isinstance(dog, Cat)` 是 `False`，狗不是猫。
+
+`issubclass(Dog, Animal)` 判断类和类之间的继承关系。
+
+`issubclass(Dog, object)` 是 `True`，因为 Python 3 里所有类最终都继承自 `object`。
+
+---
+
+### 多态：同一个调用，不同表现
+
+```python
+def run_twice(animal):
+    animal.run()
+    animal.run()
+
+
+run_twice(Dog("小黑"))
+run_twice(Cat("小花"))
+run_twice(Tortoise("慢慢", 0.1))
+```
+
+**这行在干嘛？**
+
+`run_twice()` 不关心传进来的是狗、猫还是乌龟，只要求它有 `run()` 方法。
+
+同样调用 `animal.run()`，不同对象执行不同版本的 `run()`。这就是多态。
+
+**多态有什么好处？**
+
+新增一个子类，比如 `Tortoise`，不用改 `run_twice()`。只要新类提供 `run()`，原来的通用函数就能继续用。
+
+这就是“对扩展开放，对修改关闭”的味道。
+
+---
+
+### 鸭子类型：不继承也能用
+
+```python
+class Timer:
+    def run(self):
+        print("Timer is ticking...")
+
+
+run_twice(Timer())
+```
+
+**这行在干嘛？**
+
+`Timer` 没有继承 `Animal`，但它有 `run()` 方法，所以 `run_twice(Timer())` 也能正常执行。
+
+**为什么？**
+
+Python 更看重对象“能不能做这件事”，而不是“你是不是某个类型”。
+
+这就是鸭子类型：如果一个东西走起来像鸭子、叫起来像鸭子，那就先当鸭子用。
+
+**容易踩的坑**
+
+鸭子类型很灵活，但也要求你写清楚函数期待的对象协议。比如 `run_twice()` 期待传入对象有 `run()` 方法。如果没有，就会在运行时报 `AttributeError`。
 
 ## 🏃 跑一下试试
 
 ```bash
-cd 31-inheritance
-python inheritance.py
+$ python inheritance.py
+=== 继承和方法重写 ===
+旺财 is running fast...
+咪咪 is walking quietly...
+
+=== super() 调用父类方法 ===
+龟仙人 is running slowly at 0.2 m/s...
+
+=== isinstance 和 issubclass ===
+True
+True
+False
+True
+True
+
+=== 多态 ===
+小黑 is running fast...
+小黑 is running fast...
+小花 is walking quietly...
+小花 is walking quietly...
+慢慢 is running slowly at 0.1 m/s...
+慢慢 is running slowly at 0.1 m/s...
+
+=== 鸭子类型 ===
+Timer is ticking...
+Timer is ticking...
 ```
 
 ## 💡 师兄的碎碎念
 
-- Python 所有类都默认继承 `object`，不写也是
-- 方法重写就是子类重新定义父类的同名方法
-- Python 是鸭子类型：不在乎你是不是 Animal 的子类，只要你有 `run()` 方法就行
-- 多态的好处：写通用代码，不用关心具体类型，新增子类不用改老代码
-- `isinstance()` 能识别继承链，`type()` 只看精确类型
+- 继承适合表达“is-a”关系：Dog is an Animal。
+- 子类可以继承父类属性和方法，也可以重写父类方法。
+- 子类扩展父类初始化时，常用 `super().__init__(...)` 复用父类逻辑。
+- `isinstance()` 会考虑继承链，`type(obj) is Class` 只判断精确类型。
+- Python 的多态常常和鸭子类型一起出现：不强制继承，只关心对象有没有需要的方法。
 
 ## 🎓 这一关的知识点清单
 
-| 知识点 | 说明 |
-|--------|------|
-| `class Dog(Animal)` | 继承语法，Dog 继承 Animal |
-| `def run(self)` | 子类重写父类方法 |
-| `isinstance(dog, Animal)` | 判断继承关系，返回 True |
-| `issubclass(Dog, Animal)` | 判断类的继承关系 |
-| `鸭子类型` | 不要求继承，只要有同名方法就能用 |
+- **继承**：`class Dog(Animal)` 表示 Dog 继承 Animal。
+- **父类/子类**：父类提供通用能力，子类复用并扩展。
+- **方法重写**：子类定义和父类同名的方法，调用时优先使用子类版本。
+- **super()**：调用父类方法，常用于子类初始化时复用父类逻辑。
+- **多态**：同一个方法调用，在不同对象上表现出不同行为。
+- **鸭子类型**：不要求继承某个类，只要对象提供所需方法即可。
 
 ## ➡️ 下一关
 
-下一关我们学习 [获取对象信息](../32-object-info/README.md)，继续加油！
+继承和多态搞定后，下一关看看 Python 如何检查对象：类型、属性、方法，以及 `dir()`、`getattr()` 这些工具 👉 [下一关：获取对象信息 →](../32-object-info/)
+
+

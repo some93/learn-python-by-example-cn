@@ -1,61 +1,91 @@
-# itertools
+# itertools 迭代器工具
 
 import itertools
+import operator
 
-# count：无限计数器
-for i in itertools.count(1):
-    if i > 5:
-        break
-    print(i, end=' ')    # 1 2 3 4 5
-print()
 
-# cycle：无限循环
-n = 0
-for c in itertools.cycle('ABC'):
-    if n >= 6:
-        break
-    print(c, end=' ')    # A B C A B C
-    n += 1
-print()
+print("=== 无限迭代器要截断 ===")
 
-# repeat：重复
-for x in itertools.repeat('Hi', 3):
-    print(x, end=' ')    # Hi Hi Hi
-print()
+# count 会无限计数，必须配合 islice 或 break 使用。
+print(list(itertools.islice(itertools.count(10, 2), 5)))
 
-# chain：串联多个迭代器
-for x in itertools.chain('AB', 'CD', 'EF'):
-    print(x, end=' ')    # A B C D E F
-print()
+# cycle 会无限循环一个序列。
+print(list(itertools.islice(itertools.cycle("ABC"), 8)))
 
-# groupby：相邻相同元素分组
-for key, group in itertools.groupby('AAABBBCCA'):
-    print(f"{key}: {list(group)}")
-# A: ['A', 'A', 'A']
-# B: ['B', 'B', 'B']
-# C: ['C', 'C']
-# A: ['A']
+# repeat 可以重复同一个值；第二个参数限制次数。
+print(list(itertools.repeat("Hi", 3)))
 
-# 忽略大小写分组
-for key, group in itertools.groupby('AaaBBbcCc', lambda c: c.upper()):
-    print(f"{key}: {list(group)}")
 
-# product：笛卡尔积
-print(list(itertools.product('AB', '12')))
-# [('A', '1'), ('A', '2'), ('B', '1'), ('B', '2')]
+print("\n=== chain 串联多个可迭代对象 ===")
 
-# permutations：排列
-print(list(itertools.permutations('ABC', 2)))
-# [('A', 'B'), ('A', 'C'), ('B', 'A'), ('B', 'C'), ('C', 'A'), ('C', 'B')]
+print(list(itertools.chain("AB", "CD", "EF")))
 
-# combinations：组合
-print(list(itertools.combinations('ABC', 2)))
-# [('A', 'B'), ('A', 'C'), ('B', 'C')]
+groups = [["Alice", "Bob"], ["Charlie"], ["Diana", "Eric"]]
 
-# islice：切片无限迭代器
-print(list(itertools.islice(itertools.count(10), 5)))
-# [10, 11, 12, 13, 14]
+# chain.from_iterable 适合把“列表的列表”压平成一层。
+print(list(itertools.chain.from_iterable(groups)))
 
-# accumulate：累积
-print(list(itertools.accumulate([1, 2, 3, 4, 5])))
-# [1, 3, 6, 10, 15]
+
+print("\n=== groupby 相邻分组 ===")
+
+records = [
+    {"class": "二班", "name": "Bob"},
+    {"class": "一班", "name": "Alice"},
+    {"class": "一班", "name": "Charlie"},
+    {"class": "二班", "name": "Diana"},
+]
+
+# groupby 只合并相邻元素，所以通常要先按同一个 key 排序。
+records.sort(key=lambda item: item["class"])
+for class_name, group in itertools.groupby(records, key=lambda item: item["class"]):
+    print(class_name, [item["name"] for item in group])
+
+
+print("\n=== 排列组合 ===")
+
+# product 是笛卡尔积，等价于多层 for 循环。
+print(list(itertools.product("AB", "12")))
+
+# permutations 是排列，顺序不同算不同结果。
+print(list(itertools.permutations("ABC", 2)))
+
+# combinations 是组合，顺序不同不重复计算。
+print(list(itertools.combinations("ABC", 2)))
+
+
+print("\n=== accumulate 累积计算 ===")
+
+sales = [100, -20, 50, -10]
+
+# 默认做累加，也可以传入 operator.mul、max 等函数。
+print(list(itertools.accumulate(sales)))
+print(list(itertools.accumulate([3, 1, 4, 2], max)))
+print(list(itertools.accumulate([1, 2, 3, 4], operator.mul)))
+
+
+print("\n=== takewhile / dropwhile ===")
+
+numbers = [1, 3, 5, 8, 9, 2]
+
+# takewhile 遇到第一个不满足条件的元素就停止。
+print(list(itertools.takewhile(lambda n: n < 8, numbers)))
+
+# dropwhile 跳过开头满足条件的元素，之后全部保留。
+print(list(itertools.dropwhile(lambda n: n < 8, numbers)))
+
+
+print("\n=== compress / zip_longest / pairwise ===")
+
+names = ["Alice", "Bob", "Charlie", "Diana"]
+selected = [True, False, True, False]
+
+# compress 用布尔选择器过滤数据。
+print(list(itertools.compress(names, selected)))
+
+# zip_longest 会按最长序列对齐，缺失位置用 fillvalue 补。
+print(list(itertools.zip_longest("ABC", [1, 2], fillvalue="-")))
+
+# pairwise 适合计算相邻元素关系。
+temperatures = [21, 23, 22, 25]
+print(list(itertools.pairwise(temperatures)))
+print([b - a for a, b in itertools.pairwise(temperatures)])

@@ -1,35 +1,36 @@
 # 安装第三方模块
+#
+# 这一关的命令需要在终端里执行，例如：
+# python -m pip install requests
+#
+# 为了保证示例代码离线也能运行，这里用内置 json 模块演示
+# “导入模块 -> 调用模块功能 -> 得到结果” 的流程。
 
-# Python 使用 pip 安装第三方模块
-# pip install requests
-# pip install numpy
-
-# 查看已安装的模块
-# pip list
-# pip show requests
-
-# 常用第三方模块示例
-# import requests       # HTTP 请求
-# import numpy as np    # 数值计算
-# import pandas as pd   # 数据分析
-
-# 使用 venv 创建虚拟环境（推荐！）
-# python -m venv myenv          # 创建
-# source myenv/bin/activate     # 激活（Linux/Mac）
-# myenv\Scripts\activate        # 激活（Windows）
-# deactivate                    # 退出
-
-# requirements.txt：记录项目依赖
-# pip freeze > requirements.txt        # 导出
-# pip install -r requirements.txt      # 安装
-
-# 演示：使用内置模块
 import json
 
-data = {'name': 'Alice', 'age': 25, 'skills': ['Python', 'Go']}
-json_str = json.dumps(data, ensure_ascii=False, indent=2)
-print(json_str)
 
-parsed = json.loads(json_str)
-print(parsed['name'])
-print(type(parsed))
+print("=== 使用内置模块 json ===")
+
+profile = {
+    "name": "Alice",
+    "age": 25,
+    "skills": ["Python", "Web"],
+}
+
+json_text = json.dumps(profile, ensure_ascii=False, indent=2)
+print(json_text)
+
+parsed = json.loads(json_text)
+print(parsed["name"])
+print(parsed["skills"][0])
+print(type(parsed).__name__)
+
+
+print("\n=== requirements.txt 示例 ===")
+
+requirements = [
+    "requests==2.32.3",
+    "rich==13.7.1",
+]
+
+print("\n".join(requirements))

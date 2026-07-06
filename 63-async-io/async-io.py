@@ -2,56 +2,74 @@
 
 import asyncio
 
-# 协程（coroutine）：用 async def 定义
-async def hello():
-    print("Hello!")
-    await asyncio.sleep(1)    # 异步等待（不阻塞）
-    print("World!")
 
-# 运行协程
-asyncio.run(hello())
+async def say_hello():
+    # asyncio.sleep 是异步等待，不会阻塞事件循环。
+    await asyncio.sleep(0.01)
+    return "Hello, asyncio"
 
-# 并发执行多个协程
+
 async def fetch_data(name, delay):
-    print(f"开始获取 {name}...")
-    await asyncio.sleep(delay)    # 模拟 IO 操作
-    print(f"{name} 获取完成！")
+    # 这个函数模拟一次网络/数据库 IO。
+    print(f"{name} 开始")
+    await asyncio.sleep(delay)
+    print(f"{name} 完成")
     return f"{name} 的数据"
 
+
+async def fail_later():
+    await asyncio.sleep(0.01)
+    raise ValueError("模拟失败")
+
+
 async def main():
-    # 串行执行：总共 3 秒
-    print("--- 串行 ---")
-    r1 = await fetch_data("A", 1)
-    r2 = await fetch_data("B", 2)
-    print(f"结果: {r1}, {r2}")
+    print("=== 协程对象和 await ===")
+    # 调用 async 函数只会得到 coroutine，还没有真正跑函数体。
+    coroutine = say_hello()
+    print(type(coroutine).__name__)
+    print(await coroutine)
 
-    # 并发执行：只要 2 秒！
-    print("\n--- 并发 ---")
+    print("\n=== 串行执行 ===")
+    # 串行 await 会等前一个完成后，再开始下一个。
+    first = await fetch_data("A", 0.03)
+    second = await fetch_data("B", 0.03)
+    print([first, second])
+
+    print("\n=== gather 并发执行 ===")
+    # gather 会并发调度多个协程，但返回结果保持传入顺序。
     results = await asyncio.gather(
-        fetch_data("X", 1),
-        fetch_data("Y", 2),
-        fetch_data("Z", 1.5),
+        fetch_data("X", 0.03),
+        fetch_data("Y", 0.06),
+        fetch_data("Z", 0.04),
     )
-    print(f"结果: {results}")
+    print(results)
 
-asyncio.run(main())
+    print("\n=== create_task 手动创建任务 ===")
+    task1 = asyncio.create_task(fetch_data("任务1", 0.03))
+    task2 = asyncio.create_task(fetch_data("任务2", 0.03))
 
-# Task：手动创建任务
-async def with_tasks():
-    print("\n--- Tasks ---")
-    task1 = asyncio.create_task(fetch_data("任务1", 1))
-    task2 = asyncio.create_task(fetch_data("任务2", 2))
+    # create_task 后任务已经交给事件循环调度，await 只是等待结果。
+    print(task1.done(), task2.done())
+    task_results = await asyncio.gather(task1, task2)
+    print(task_results)
 
-    # 两个任务已经开始运行了
-    r1 = await task1
-    r2 = await task2
-    print(f"结果: {r1}, {r2}")
+    print("\n=== wait_for 超时控制 ===")
+    try:
+        # 超时后，wait_for 会取消内部任务并抛 TimeoutError。
+        await asyncio.wait_for(fetch_data("慢任务", 0.2), timeout=0.05)
+    except asyncio.TimeoutError as error:
+        print(type(error).__name__)
 
-asyncio.run(with_tasks())
+    print("\n=== gather 收集异常 ===")
+    # return_exceptions=True 让异常作为结果返回，适合批量任务汇总。
+    mixed = await asyncio.gather(
+        fetch_data("正常任务", 0.01),
+        fail_later(),
+        return_exceptions=True,
+    )
+    print([type(item).__name__ if isinstance(item, Exception) else item for item in mixed])
 
-# 异步 IO 的核心思想：
-# 1. 遇到 IO 操作（网络请求、文件读写）时不等待，切换去做别的
-# 2. IO 完成后再切回来继续执行
-# 3. 单线程就能处理大量并发 IO
-# 4. 适合：Web 服务器、爬虫、聊天服务器等 IO 密集型任务
-# 5. 不适合：CPU 密集型计算（用多进程）
+
+if __name__ == "__main__":
+    # asyncio.run 是异步程序的入口，负责创建和关闭事件循环。
+    asyncio.run(main())

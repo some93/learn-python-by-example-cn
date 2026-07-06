@@ -1,93 +1,126 @@
-# 第 62 关：使用Web框架（师兄带你学 Python）
+# 第 62 关：使用 Web 框架（师兄带你学 Python）
 
 ## 🎯 这一关你会学到
 
-- 了解 Web 框架的作用
-- 用 Flask 定义路由
-- 处理 GET/POST 请求
-- 返回 JSON 响应
+- Web 框架在 WSGI 之上帮你解决什么问题
+- 如何用 Flask 定义 GET / POST 路由
+- 如何读取路径参数和查询参数
+- 如何读取 JSON 请求体
+- 如何返回 JSON 和状态码
+- 如何写 404 错误处理
+- 如何用 `test_client()` 离线测试接口
 
 ## 🤔 先想一个问题
 
-直接写 WSGI 太底层了，你得自己解析 URL、处理参数、管理路由……Web 框架帮你把这些脏活全干了，你只需要写业务逻辑。
+上一关直接写 WSGI，你要自己判断路径、解析查询参数、组装状态码和响应头。真实项目这样写太累了。
 
-带着这个问题，我们来看代码。
+Web 框架的价值是把常见 Web 工作抽象好：路由匹配、请求对象、响应对象、JSON、错误处理、中间件、测试工具。你把精力放在业务逻辑上。
+
+Flask 是一个轻量 Web 框架。使用前需要安装：
+
+```bash
+python -m pip install flask
+```
 
 ## 📖 看代码
 
 ```python
 # 使用 Web 框架（Flask）
 
-# 注意：需要安装 pip install flask
-# 以下代码展示 Flask 的基本用法
-
 try:
-    from flask import Flask, request, jsonify
+    from flask import Flask, jsonify, request
+except ImportError:
+    Flask = None
 
+
+def create_app():
     app = Flask(__name__)
 
-    # 路由：URL 映射到函数
-    @app.route('/')
+    @app.get("/")
     def index():
-        return '<h1>首页</h1><p>欢迎使用 Flask！</p>'
+        # 返回字符串时，Flask 会自动包装成 HTTP 响应。
+        return "欢迎使用 Flask"
 
-    @app.route('/hello/<name>')
+    @app.get("/hello/<name>")
     def hello(name):
-        return f'<h1>Hello, {name}!</h1>'
+        # URL 里的 <name> 会作为函数参数传进来。
+        return f"Hello, {name}"
 
-    # 获取请求参数
-    @app.route('/greet')
+    @app.get("/greet")
     def greet():
-        name = request.args.get('name', 'World')
-        return f'<h1>Hello, {name}!</h1>'
+        # request.args 用来读取查询参数。
+        name = request.args.get("name", "World")
+        return jsonify({"message": f"Hello, {name}"})
 
-    # 处理 POST 请求
-    @app.route('/api/user', methods=['POST'])
+    @app.post("/api/users")
     def create_user():
-        data = request.get_json()
-        return jsonify({
-            'status': 'ok',
-            'user': data
-        })
+        # silent=True 表示 JSON 无效时返回 None，而不是直接抛异常。
+        data = request.get_json(silent=True) or {}
+        name = data.get("name")
 
-    # 错误处理
+        if not name:
+            return jsonify({"error": "name is required"}), 400
+
+        return jsonify({"id": 1, "name": name}), 201
+
     @app.errorhandler(404)
-    def not_found(e):
-        return '<h1>404</h1><p>页面不存在</p>', 404
+    def not_found(error):
+        # 错误处理函数也可以返回 JSON 和状态码。
+        return jsonify({"error": "not found"}), 404
 
-    if __name__ == '__main__':
-        print("Flask 应用示例")
-        print("路由列表：")
-        print("  GET  /          -> 首页")
-        print("  GET  /hello/<n> -> 问候")
-        print("  GET  /greet     -> 带参数问候")
-        print("  POST /api/user  -> 创建用户")
-        # app.run(debug=True)  # 取消注释启动服务器
+    return app
 
-except ImportError:
-    print("请先安装 Flask: pip install flask")
-    print()
-    print("Flask 是最流行的 Python Web 框架之一")
-    print("特点：轻量、灵活、扩展性强")
-    print("适合：小型项目、API 服务、快速原型")
 
-# Flask vs Django：
-# Flask：微框架，只提供核心功能，其他靠扩展
-# Django：全功能框架，自带 ORM、Admin、认证等
-# 选择建议：小项目用 Flask，大项目用 Django
+def main():
+    if Flask is None:
+        print("请先安装 Flask: python -m pip install flask")
+        return
+
+    app = create_app()
+
+    # test_client 不需要真的启动端口，适合教程、测试和 CI。
+    client = app.test_client()
+
+    print("=== GET 路由 ===")
+    response = client.get("/")
+    print(response.status_code, response.get_data(as_text=True))
+
+    response = client.get("/hello/Alice")
+    print(response.status_code, response.get_data(as_text=True))
+
+    print("\n=== 查询参数和 JSON 响应 ===")
+    response = client.get("/greet?name=Bob")
+    print(response.status_code, response.get_json())
+
+    print("\n=== POST JSON ===")
+    response = client.post("/api/users", json={"name": "Charlie"})
+    print(response.status_code, response.get_json())
+
+    response = client.post("/api/users", json={})
+    print(response.status_code, response.get_json())
+
+    print("\n=== 404 错误处理 ===")
+    response = client.get("/missing")
+    print(response.status_code, response.get_json())
+
+
+if __name__ == "__main__":
+    main()
 ```
 
-## 🔍 师兄给你逐行拆
+## 🔍 师兄给你拆开讲
 
-> 代码已经在注释中做了详细说明，这里挑重点讲。
+`create_app()` 是常见写法，叫应用工厂。测试、配置、多环境部署时，比在全局直接写死 `app = Flask(__name__)` 更灵活。
 
-### 核心要点
+`@app.get("/")` 和 `@app.post("/api/users")` 是路由装饰器，把 URL 和函数绑定起来。浏览器或客户端请求这个路径时，Flask 调用对应函数。
 
-- Flask 用 `@app.route()` 装饰器定义路由，简洁直观
-- `<name>` 语法可以从 URL 中提取变量
-- `request.args` 获取 GET 参数，`request.get_json()` 获取 POST JSON
-- `jsonify()` 返回 JSON 响应
-- Flask 适合小项目和 API，Django 适合大型项目
+`/hello/<name>` 里的 `<name>` 是路径参数，会传给 `hello(name)`。`request.args` 读取查询参数，比如 `/greet?name=Bob`。
+
+`request.get_json()` 读取 JSON 请求体。示例里用 `silent=True`，表示请求体不是合法 JSON 时返回 `None`，方便我们自己返回 400。
+
+`jsonify()` 返回 JSON 响应。函数可以返回 `(body, status_code)`，例如 `return jsonify(...), 201`。
+
+`app.test_client()` 不需要真正启动服务器，能直接模拟 HTTP 请求。写接口测试时非常好用，也适合教程稳定演示。
 
 ## 🏃 跑一下试试
 
@@ -96,25 +129,45 @@ cd 62-web-framework
 python web-framework.py
 ```
 
-## 💡 师兄的碎碎念
+输出：
 
-- Flask 用 `@app.route()` 装饰器定义路由，简洁直观
-- `<name>` 语法可以从 URL 中提取变量
-- `request.args` 获取 GET 参数，`request.get_json()` 获取 POST JSON
-- `jsonify()` 返回 JSON 响应
-- Flask 适合小项目和 API，Django 适合大型项目
+```text
+=== GET 路由 ===
+200 欢迎使用 Flask
+200 Hello, Alice
+
+=== 查询参数和 JSON 响应 ===
+200 {'message': 'Hello, Bob'}
+
+=== POST JSON ===
+201 {'id': 1, 'name': 'Charlie'}
+400 {'error': 'name is required'}
+
+=== 404 错误处理 ===
+404 {'error': 'not found'}
+```
+
+## 💡 师兄的提醒
+
+Flask 是微框架，核心轻量，扩展自由；Django 是全功能框架，自带 ORM、Admin、认证等。小型 API、原型、脚本后台常用 Flask；复杂业务后台常会考虑 Django 或 FastAPI。
+
+开发服务器只适合本地开发。生产环境要使用 Gunicorn、uWSGI、Uvicorn 等应用服务器，并放在 Nginx 等反向代理后面。
 
 ## 🎓 这一关的知识点清单
 
 | 知识点 | 说明 |
 |--------|------|
-| `@app.route(path)` | 定义路由 |
-| `@app.route(path, methods=['POST'])` | 指定请求方法 |
-| `request.args.get(key)` | 获取 GET 参数 |
-| `request.get_json()` | 获取 POST JSON 数据 |
-| `jsonify(dict)` | 返回 JSON 响应 |
-| `Flask vs Django` | 微框架 vs 全功能框架 |
+| `Flask(__name__)` | 创建 Flask 应用 |
+| 应用工厂 | 用函数创建并配置 app |
+| `@app.get()` / `@app.post()` | 定义路由和请求方法 |
+| `<name>` | 路径参数 |
+| `request.args` | 查询参数 |
+| `request.get_json()` | JSON 请求体 |
+| `jsonify()` | 返回 JSON 响应 |
+| `(response, status)` | 同时返回响应体和状态码 |
+| `@app.errorhandler(404)` | 自定义错误处理 |
+| `app.test_client()` | 测试客户端 |
 
 ## ➡️ 下一关
 
-下一关我们学习 [异步IO](../63-async-io/README.md)，继续加油！
+下一关：[异步 IO](../63-async-io/README.md)。

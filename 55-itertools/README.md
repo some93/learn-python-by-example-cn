@@ -2,94 +2,126 @@
 
 ## 🎯 这一关你会学到
 
-- 使用无限迭代器：`count`、`cycle`、`repeat`
-- 使用组合迭代器：`chain`、`groupby`
-- 使用排列组合：`product`、`permutations`、`combinations`
-- 用 `islice` 切片无限迭代器
+- `count`、`cycle`、`repeat` 这类无限迭代器如何安全使用
+- `islice` 如何截断惰性迭代器
+- `chain` / `chain.from_iterable` 如何串联数据
+- `groupby` 为什么要先排序
+- `product`、`permutations`、`combinations` 的区别
+- `accumulate`、`takewhile`、`dropwhile`、`compress`、`zip_longest`、`pairwise` 的常用场景
 
 ## 🤔 先想一个问题
 
-你想生成所有可能的密码组合、把多个列表串起来、或者对数据分组统计。手写循环很麻烦，`itertools` 提供了一堆现成的「迭代器积木」，拼起来就能用。
+你要处理一批数据：多个列表要串起来、学生要按班级分组、温度要计算相邻差值、两个序列长度不同还要配对。
 
-带着这个问题，我们来看代码。
+这些都能手写循环，但 `itertools` 提供了很多“迭代器积木”。它们的共同特点是：**惰性计算，按需产出，不急着创建完整列表**。
 
 ## 📖 看代码
 
 ```python
-# itertools
+# itertools 迭代器工具
 
 import itertools
+import operator
 
-# count：无限计数器
-for i in itertools.count(1):
-    if i > 5:
-        break
-    print(i, end=' ')    # 1 2 3 4 5
-print()
 
-# cycle：无限循环
-n = 0
-for c in itertools.cycle('ABC'):
-    if n >= 6:
-        break
-    print(c, end=' ')    # A B C A B C
-    n += 1
-print()
+print("=== 无限迭代器要截断 ===")
 
-# repeat：重复
-for x in itertools.repeat('Hi', 3):
-    print(x, end=' ')    # Hi Hi Hi
-print()
+# count 会无限计数，必须配合 islice 或 break 使用。
+print(list(itertools.islice(itertools.count(10, 2), 5)))
 
-# chain：串联多个迭代器
-for x in itertools.chain('AB', 'CD', 'EF'):
-    print(x, end=' ')    # A B C D E F
-print()
+# cycle 会无限循环一个序列。
+print(list(itertools.islice(itertools.cycle("ABC"), 8)))
 
-# groupby：相邻相同元素分组
-for key, group in itertools.groupby('AAABBBCCA'):
-    print(f"{key}: {list(group)}")
-# A: ['A', 'A', 'A']
-# B: ['B', 'B', 'B']
-# C: ['C', 'C']
-# A: ['A']
+# repeat 可以重复同一个值；第二个参数限制次数。
+print(list(itertools.repeat("Hi", 3)))
 
-# 忽略大小写分组
-for key, group in itertools.groupby('AaaBBbcCc', lambda c: c.upper()):
-    print(f"{key}: {list(group)}")
 
-# product：笛卡尔积
-print(list(itertools.product('AB', '12')))
-# [('A', '1'), ('A', '2'), ('B', '1'), ('B', '2')]
+print("\n=== chain 串联多个可迭代对象 ===")
 
-# permutations：排列
-print(list(itertools.permutations('ABC', 2)))
-# [('A', 'B'), ('A', 'C'), ('B', 'A'), ('B', 'C'), ('C', 'A'), ('C', 'B')]
+print(list(itertools.chain("AB", "CD", "EF")))
 
-# combinations：组合
-print(list(itertools.combinations('ABC', 2)))
-# [('A', 'B'), ('A', 'C'), ('B', 'C')]
+groups = [["Alice", "Bob"], ["Charlie"], ["Diana", "Eric"]]
 
-# islice：切片无限迭代器
-print(list(itertools.islice(itertools.count(10), 5)))
-# [10, 11, 12, 13, 14]
+# chain.from_iterable 适合把“列表的列表”压平成一层。
+print(list(itertools.chain.from_iterable(groups)))
 
-# accumulate：累积
-print(list(itertools.accumulate([1, 2, 3, 4, 5])))
-# [1, 3, 6, 10, 15]
+
+print("\n=== groupby 相邻分组 ===")
+
+records = [
+    {"class": "二班", "name": "Bob"},
+    {"class": "一班", "name": "Alice"},
+    {"class": "一班", "name": "Charlie"},
+    {"class": "二班", "name": "Diana"},
+]
+
+# groupby 只合并相邻元素，所以通常要先按同一个 key 排序。
+records.sort(key=lambda item: item["class"])
+for class_name, group in itertools.groupby(records, key=lambda item: item["class"]):
+    print(class_name, [item["name"] for item in group])
+
+
+print("\n=== 排列组合 ===")
+
+# product 是笛卡尔积，等价于多层 for 循环。
+print(list(itertools.product("AB", "12")))
+
+# permutations 是排列，顺序不同算不同结果。
+print(list(itertools.permutations("ABC", 2)))
+
+# combinations 是组合，顺序不同不重复计算。
+print(list(itertools.combinations("ABC", 2)))
+
+
+print("\n=== accumulate 累积计算 ===")
+
+sales = [100, -20, 50, -10]
+
+# 默认做累加，也可以传入 operator.mul、max 等函数。
+print(list(itertools.accumulate(sales)))
+print(list(itertools.accumulate([3, 1, 4, 2], max)))
+print(list(itertools.accumulate([1, 2, 3, 4], operator.mul)))
+
+
+print("\n=== takewhile / dropwhile ===")
+
+numbers = [1, 3, 5, 8, 9, 2]
+
+# takewhile 遇到第一个不满足条件的元素就停止。
+print(list(itertools.takewhile(lambda n: n < 8, numbers)))
+
+# dropwhile 跳过开头满足条件的元素，之后全部保留。
+print(list(itertools.dropwhile(lambda n: n < 8, numbers)))
+
+
+print("\n=== compress / zip_longest / pairwise ===")
+
+names = ["Alice", "Bob", "Charlie", "Diana"]
+selected = [True, False, True, False]
+
+# compress 用布尔选择器过滤数据。
+print(list(itertools.compress(names, selected)))
+
+# zip_longest 会按最长序列对齐，缺失位置用 fillvalue 补。
+print(list(itertools.zip_longest("ABC", [1, 2], fillvalue="-")))
+
+# pairwise 适合计算相邻元素关系。
+temperatures = [21, 23, 22, 25]
+print(list(itertools.pairwise(temperatures)))
+print([b - a for a, b in itertools.pairwise(temperatures)])
 ```
 
-## 🔍 师兄给你逐行拆
+## 🔍 师兄给你拆开讲
 
-> 代码已经在注释中做了详细说明，这里挑重点讲。
+`count()`、`cycle()` 是无限迭代器，直接 `list(itertools.count())` 会一直跑下去。使用时要配合 `islice()`、`break` 或其他终止条件。
 
-### 核心要点
+`chain()` 把多个可迭代对象接成一个迭代器，不需要先创建大列表。`chain.from_iterable()` 常用于把二维列表压平成一层。
 
-- `count/cycle/repeat` 是无限迭代器，记得用 `islice` 或 `break` 截断
-- `chain` 把多个迭代器串成一个，比 `list1 + list2` 更省内存
-- `groupby` 要求数据先排序！相邻相同的才会分在一组
-- `product` 是笛卡尔积，等价于多层 for 循环
-- `combinations` 是组合（不考虑顺序），`permutations` 是排列（考虑顺序）
+`groupby()` 只把“相邻且 key 相同”的元素放在一组。它不是 SQL 的 `GROUP BY`，不会自动把分散在各处的相同 key 聚到一起，所以通常要先排序。
+
+`product()` 是笛卡尔积，适合生成所有参数组合；`permutations()` 是排列，顺序不同算不同；`combinations()` 是组合，顺序不同不重复。
+
+`takewhile()` 和 `dropwhile()` 都只关注开头连续满足条件的部分。一旦 `takewhile()` 遇到第一个不满足条件的元素就停止，不会继续往后找。
 
 ## 🏃 跑一下试试
 
@@ -98,25 +130,69 @@ cd 55-itertools
 python itertools_demo.py
 ```
 
-## 💡 师兄的碎碎念
+输出：
 
-- `count/cycle/repeat` 是无限迭代器，记得用 `islice` 或 `break` 截断
-- `chain` 把多个迭代器串成一个，比 `list1 + list2` 更省内存
-- `groupby` 要求数据先排序！相邻相同的才会分在一组
-- `product` 是笛卡尔积，等价于多层 for 循环
-- `combinations` 是组合（不考虑顺序），`permutations` 是排列（考虑顺序）
+```text
+=== 无限迭代器要截断 ===
+[10, 12, 14, 16, 18]
+['A', 'B', 'C', 'A', 'B', 'C', 'A', 'B']
+['Hi', 'Hi', 'Hi']
+
+=== chain 串联多个可迭代对象 ===
+['A', 'B', 'C', 'D', 'E', 'F']
+['Alice', 'Bob', 'Charlie', 'Diana', 'Eric']
+
+=== groupby 相邻分组 ===
+一班 ['Alice', 'Charlie']
+二班 ['Bob', 'Diana']
+
+=== 排列组合 ===
+[('A', '1'), ('A', '2'), ('B', '1'), ('B', '2')]
+[('A', 'B'), ('A', 'C'), ('B', 'A'), ('B', 'C'), ('C', 'A'), ('C', 'B')]
+[('A', 'B'), ('A', 'C'), ('B', 'C')]
+
+=== accumulate 累积计算 ===
+[100, 80, 130, 120]
+[3, 3, 4, 4]
+[1, 2, 6, 24]
+
+=== takewhile / dropwhile ===
+[1, 3, 5]
+[8, 9, 2]
+
+=== compress / zip_longest / pairwise ===
+['Alice', 'Charlie']
+[('A', 1), ('B', 2), ('C', '-')]
+[(21, 23), (23, 22), (22, 25)]
+[2, -1, 3]
+```
+
+## 💡 师兄的提醒
+
+`itertools` 的优势是省内存、可组合，但可读性也要控制。三四个迭代器函数嵌在一起时，可能不如一个清楚的 `for` 循环。
+
+看到无限迭代器先问自己：它在哪里停？看到 `groupby` 先问自己：数据是否已经按同一个 key 排好序？
 
 ## 🎓 这一关的知识点清单
 
 | 知识点 | 说明 |
 |--------|------|
-| `count(start)` | 从 start 开始的无限计数 |
+| `count(start, step)` | 无限计数器 |
 | `cycle(iterable)` | 无限循环迭代 |
-| `chain(a, b, c)` | 串联多个迭代器 |
-| `groupby(iterable, key)` | 相邻元素分组 |
-| `product(a, b)` | 笛卡尔积 |
-| `combinations/permutations` | 组合/排列 |
+| `repeat(value, n)` | 重复指定值 |
+| `islice(iterable, n)` | 截断或切片迭代器 |
+| `chain()` | 串联多个可迭代对象 |
+| `chain.from_iterable()` | 展平一层嵌套 |
+| `groupby()` | 按相邻 key 分组 |
+| `product()` | 笛卡尔积 |
+| `permutations()` | 排列 |
+| `combinations()` | 组合 |
+| `accumulate()` | 累积计算 |
+| `takewhile()` / `dropwhile()` | 按开头连续条件截取或丢弃 |
+| `compress()` | 用布尔选择器过滤 |
+| `zip_longest()` | 按最长序列配对 |
+| `pairwise()` | 生成相邻元素对 |
 
 ## ➡️ 下一关
 
-下一关我们学习 [contextlib](../56-contextlib/README.md)，继续加油！
+下一关：[contextlib](../56-contextlib/README.md)。

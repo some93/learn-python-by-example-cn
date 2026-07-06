@@ -1,47 +1,67 @@
-# 正则表达式
-
 import re
 
-# 基础匹配
-print(re.match(r'\d{3}-\d{4}', '010-1234'))    # 匹配成功
 
-# 常用元字符
-# \d 数字    \w 字母/数字/下划线    \s 空白字符
-# .  任意字符   * 0或多个   + 1或多个   ? 0或1个
-# {n} 恰好n个   {n,m} n到m个
+print("=== match / search / fullmatch ===")
+# match 从字符串开头找，开头不是数字，所以失败。
+print(bool(re.match(r"\d+", "abc123")))
 
-# 匹配手机号
-pattern = r'^1[3-9]\d{9}$'
-print(re.match(pattern, '13800138000'))    # 匹配
-print(re.match(pattern, '12345678901'))    # None
+# search 会扫描整个字符串，能找到中间的数字。
+print(re.search(r"\d+", "abc123").group())
 
-# 匹配邮箱（简化版）
-email_pattern = r'^[\w.+-]+@[\w-]+\.[\w.]+$'
-print(re.match(email_pattern, 'user@example.com'))    # 匹配
+# fullmatch 要求整个字符串都符合模式。
+print(bool(re.fullmatch(r"\d{3}-\d{4}", "010-1234")))
 
-# 分组提取
-m = re.match(r'^(\d{3})-(\d{3,8})$', '010-12345')
-if m:
-    print(m.group(0))    # 010-12345（整个匹配）
-    print(m.group(1))    # 010（第一组）
-    print(m.group(2))    # 12345（第二组）
 
-# 贪婪 vs 非贪婪
-print(re.match(r'^(\d+)(0*)$', '102300').groups())
-# ('102300', '') —— \d+ 贪婪，吃掉了所有数字
+print("\n=== 提取手机号和邮箱 ===")
+text = "联系人: Alice <alice@example.com>, Bob <bob@python.org>; 电话: 13800138000 / 010-12345678"
 
-print(re.match(r'^(\d+?)(0*)$', '102300').groups())
-# ('1023', '00') —— \d+? 非贪婪，尽量少匹配
+# (?<!\d) 和 (?!\d) 是前后断言，避免匹配到更长数字串的一部分。
+phone_re = re.compile(r"(?<!\d)1[3-9]\d{9}(?!\d)")
 
-# 切分字符串
-print(re.split(r'[\s,;]+', 'a,b;; c  d'))    # ['a', 'b', 'c', 'd']
+# 这个邮箱规则是教学用的简化版，真实业务里不要自己手写复杂邮箱校验。
+email_re = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 
-# 编译正则（提高效率）
-phone_re = re.compile(r'^1[3-9]\d{9}$')
-print(phone_re.match('13912345678'))
+print(phone_re.findall(text))
+print(email_re.findall(text))
 
-# 替换
-print(re.sub(r'\d+', '#', 'abc123def456'))    # abc#def#
 
-# findall：找出所有匹配
-print(re.findall(r'\d+', 'age=18, score=99'))    # ['18', '99']
+print("\n=== 命名分组解析日志 ===")
+line = "2026-07-06 09:30 ERROR payment timeout"
+
+# ?P<name> 可以给分组命名，后面用 groupdict() 直接拿字典。
+log_re = re.compile(
+    r"(?P<date>\d{4}-\d{2}-\d{2}) "
+    r"(?P<time>\d{2}:\d{2}) "
+    r"(?P<level>INFO|WARN|ERROR) "
+    r"(?P<message>.+)"
+)
+match = log_re.fullmatch(line)
+print(match.groupdict())
+
+
+print("\n=== 贪婪和非贪婪 ===")
+html = "<title>Python</title><title>Regex</title>"
+
+# .* 是贪婪匹配，会尽量多吃字符。
+print(re.findall(r"<title>.*</title>", html))
+
+# .*? 是非贪婪匹配，遇到第一个 </title> 就停。
+print(re.findall(r"<title>.*?</title>", html))
+
+
+print("\n=== split / sub ===")
+# 用多个分隔符切分文本：空白、逗号、分号都算分隔符。
+print(re.split(r"[\s,;]+", "python, regex;; tutorial  demo"))
+
+# 替换时可以用 \1、\2 引用前面捕获到的分组。
+print(re.sub(r"(\d{3})\d{4}(\d{4})", r"\1****\2", "13800138000"))
+
+
+print("\n=== flags ===")
+config = "HOST=localhost\nPORT=8000\nDEBUG=true"
+
+# re.M 让 ^ 和 $ 按“每一行”的开头结尾匹配。
+print(re.findall(r"^\w+", config, flags=re.M))
+
+# re.I 忽略大小写，debug 也能匹配 DEBUG。
+print(re.findall(r"debug=(true|false)", config, flags=re.I))

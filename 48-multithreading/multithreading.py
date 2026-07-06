@@ -3,65 +3,90 @@
 import threading
 import time
 
-# 创建线程
+
+print("=== 创建线程 ===")
+
+
 def task(name):
-    print(f"线程 {name} 开始，ID: {threading.current_thread().name}")
-    time.sleep(1)
-    print(f"线程 {name} 结束")
+    print(f"{name} 开始")
+    # sleep 模拟耗时任务，让线程切换更容易观察。
+    time.sleep(0.1)
+    print(f"{name} 结束")
 
-t = threading.Thread(target=task, args=('Worker-1',), name='Worker-1')
-t.start()
-t.join()
 
-# 多线程共享变量的问题
-balance = 0
+# target 指定线程函数，name 方便日志和调试。
+thread = threading.Thread(target=task, args=("Worker-1",), name="Worker-1")
+thread.start()
+# join 等待线程结束。
+thread.join()
+print(thread.is_alive())
 
-def change_it(n):
-    global balance
-    for _ in range(1000000):
-        balance += n
-        balance -= n
 
-t1 = threading.Thread(target=change_it, args=(5,))
-t2 = threading.Thread(target=change_it, args=(8,))
+print("\n=== 共享变量的数据竞争 ===")
+
+counter = 0
+# Barrier 让两个线程都读完 counter 后再继续写，稳定复现竞争问题。
+barrier = threading.Barrier(2)
+
+
+def unsafe_add_one():
+    global counter
+    # 两个线程可能读到同一个旧值。
+    current = counter
+    barrier.wait()
+    # 再各自写回 current + 1，导致一次更新丢失。
+    counter = current + 1
+
+
+t1 = threading.Thread(target=unsafe_add_one)
+t2 = threading.Thread(target=unsafe_add_one)
 t1.start()
 t2.start()
 t1.join()
 t2.join()
-print(f"balance = {balance}")    # 可能不是 0！
+print(counter)
 
-# 用 Lock 解决
+
+print("\n=== 用 Lock 保护共享变量 ===")
+
+counter = 0
 lock = threading.Lock()
-balance = 0
 
-def safe_change_it(n):
-    global balance
-    for _ in range(1000000):
-        lock.acquire()
-        try:
-            balance += n
-            balance -= n
-        finally:
-            lock.release()
 
-t1 = threading.Thread(target=safe_change_it, args=(5,))
-t2 = threading.Thread(target=safe_change_it, args=(8,))
+def safe_add_one():
+    global counter
+    # with lock 保证同一时间只有一个线程修改 counter。
+    with lock:
+        current = counter
+        counter = current + 1
+
+
+t1 = threading.Thread(target=safe_add_one)
+t2 = threading.Thread(target=safe_add_one)
 t1.start()
 t2.start()
 t1.join()
 t2.join()
-print(f"balance (with lock) = {balance}")    # 一定是 0
+print(counter)
 
-# Python 的 GIL（全局解释器锁）
-# Python 的线程无法利用多核 CPU！
-# 计算密集型任务用多进程，IO 密集型任务用多线程
 
-# 更简洁的 lock 用法：with 语句
-lock = threading.Lock()
+print("\n=== 多线程适合 IO 等待 ===")
 
-def better_change(n):
-    global balance
-    for _ in range(100):
-        with lock:    # 自动 acquire 和 release
-            balance += n
-            balance -= n
+
+def fake_download(name):
+    # IO 等待期间线程可以切换去做别的任务。
+    time.sleep(0.1)
+    print(f"{name} 下载完成")
+
+
+threads = [
+    threading.Thread(target=fake_download, args=("file-a",)),
+    threading.Thread(target=fake_download, args=("file-b",)),
+]
+
+for item in threads:
+    item.start()
+for item in threads:
+    item.join()
+
+print("全部完成")

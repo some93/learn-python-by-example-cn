@@ -1,40 +1,72 @@
 # WSGI 接口
 
-# WSGI = Web Server Gateway Interface
-# 它是 Python Web 应用和 Web 服务器之间的标准接口
+from urllib.parse import parse_qs
+from urllib.request import Request, urlopen
+from wsgiref.simple_server import WSGIRequestHandler, make_server
+import threading
 
-# 一个最简单的 WSGI 应用
-def simple_app(environ, start_response):
-    # environ：包含所有 HTTP 请求信息的字典
-    # start_response：发送 HTTP 响应头的函数
-    start_response('200 OK', [('Content-Type', 'text/html; charset=utf-8')])
-    path = environ.get('PATH_INFO', '/')
-    if path == '/':
-        body = '<h1>首页</h1><p>这是一个 WSGI 应用！</p>'
-    elif path == '/hello':
-        body = '<h1>Hello!</h1><p>你好，世界！</p>'
+
+def application(environ, start_response):
+    # environ 是 WSGI 服务器整理好的请求信息字典。
+    path = environ.get("PATH_INFO", "/")
+    query = parse_qs(environ.get("QUERY_STRING", ""))
+
+    if path == "/":
+        status = "200 OK"
+        body = "首页"
+    elif path == "/hello":
+        status = "200 OK"
+        name = query.get("name", ["World"])[0]
+        body = f"Hello, {name}"
     else:
-        start_response('404 Not Found', [('Content-Type', 'text/html; charset=utf-8')])
-        body = '<h1>404</h1><p>页面不存在</p>'
-    return [body.encode('utf-8')]
+        status = "404 Not Found"
+        body = "页面不存在"
 
-# 用 Python 内置的 wsgiref 启动
-if __name__ == '__main__':
-    from wsgiref.simple_server import make_server
+    response_body = body.encode("utf-8")
+    headers = [
+        ("Content-Type", "text/plain; charset=utf-8"),
+        ("Content-Length", str(len(response_body))),
+    ]
 
-    print("启动 WSGI 服务器: http://127.0.0.1:8000")
-    print("按 Ctrl+C 停止")
+    # start_response 只能在确定状态码和响应头后调用。
+    start_response(status, headers)
+    return [response_body]
 
-    server = make_server('127.0.0.1', 8000, simple_app)
 
+class QuietHandler(WSGIRequestHandler):
+    def log_message(self, format, *args):
+        # 关闭默认访问日志，让教程输出只保留我们关心的内容。
+        return
+
+
+def run_server(server, request_count):
+    for _ in range(request_count):
+        server.handle_request()
+
+
+def fetch(url):
     try:
-        server.handle_request()    # 只处理一个请求（演示用）
-        print("已处理一个请求，退出")
-    except KeyboardInterrupt:
-        print("\n服务器已停止")
+        with urlopen(Request(url), timeout=3) as response:
+            return response.status, response.read().decode("utf-8")
+    except Exception as error:
+        # urllib 遇到 404 会抛 HTTPError，它也有 status 和 read()。
+        if hasattr(error, "status"):
+            return error.status, error.read().decode("utf-8")
+        raise
 
-# WSGI 的核心思想：
-# 1. Web 服务器（如 Nginx）负责接收 HTTP 请求
-# 2. WSGI 负责把请求转给 Python 应用
-# 3. Python 应用处理请求，返回响应
-# 4. 开发时用 wsgiref，生产环境用 Gunicorn、uWSGI 等
+
+if __name__ == "__main__":
+    # 端口传 0，避免固定端口和本机其他服务冲突。
+    server = make_server("127.0.0.1", 0, application, handler_class=QuietHandler)
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    thread = threading.Thread(target=run_server, args=(server, 3))
+    thread.start()
+
+    print("=== WSGI 应用响应 ===")
+    for path in ["/", "/hello?name=Alice", "/missing"]:
+        status, body = fetch(base_url + path)
+        print(status, body)
+
+    thread.join()
+    server.server_close()

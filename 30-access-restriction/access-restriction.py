@@ -1,9 +1,17 @@
 # 访问限制
 
+
+print("=== 私有属性和公开方法 ===")
+
+
 class Student:
     def __init__(self, name, score):
-        self.__name = name      # 双下划线开头：私有属性
+        # 双下划线开头会触发名字改编，外部不能直接用 __name 访问。
+        self.__name = name
         self.__score = score
+
+        # 单下划线只是约定私有，语法上仍然能访问。
+        self._school = "Springfield School"
 
     def get_name(self):
         return self.__name
@@ -12,29 +20,52 @@ class Student:
         return self.__score
 
     def set_score(self, score):
-        if 0 <= score <= 100:
-            self.__score = score
-        else:
-            raise ValueError('分数必须在 0-100 之间')
+        # 通过 setter 统一校验，避免外部随便写入非法值。
+        if not 0 <= score <= 100:
+            raise ValueError("分数必须在 0-100 之间")
+        self.__score = score
 
     def print_info(self):
         print(f"{self.__name}: {self.__score}")
 
-bart = Student('Bart', 59)
+
+bart = Student("Bart", 59)
 bart.print_info()
-
-# 不能直接访问私有属性
-# print(bart.__name)  # AttributeError!
-
-# 通过 getter/setter 访问
 print(bart.get_name())
+print(bart.get_score())
+
 bart.set_score(80)
 bart.print_info()
 
-# Python 的"私有"是名字改编，不是真正的访问控制
-# 实际上可以通过 _类名__属性名 访问（但不要这样做！）
-print(bart._Student__name)    # Bart（能访问但别这么干）
 
-# 单下划线 _xxx：约定私有，外部可以访问但不建议
-# 双下划线 __xxx：名字改编为 _ClassName__xxx
-# __xxx__：特殊变量（如 __init__），不是私有的
+print("\n=== setter 负责校验 ===")
+
+try:
+    bart.set_score(120)
+except ValueError as error:
+    print(error)
+
+
+print("\n=== 不能直接访问双下划线属性 ===")
+
+try:
+    # 外部没有 bart.__name 这个属性名。
+    print(bart.__name)
+except AttributeError as error:
+    print(type(error).__name__)
+
+
+print("\n=== 名字改编：能访问，但不该访问 ===")
+
+# Python 会把 __name 改成 _类名__name，目的是避免意外访问。
+print(bart._Student__name)
+print(bart._Student__score)
+
+
+print("\n=== 三种下划线写法 ===")
+
+print(bart._school)
+print(hasattr(bart, "__name"))
+print(hasattr(bart, "_Student__name"))
+# __init__ 这种首尾双下划线是特殊方法，不属于私有属性。
+print(Student.__init__.__name__)

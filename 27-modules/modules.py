@@ -1,50 +1,58 @@
-# 模块（Module）
+"""演示 Python 模块的基本写法。"""
 
-# Python 用模块组织代码，一个 .py 文件就是一个模块
-
-# 标准模块结构
-"""
-这是模块的文档字符串（docstring）
-"""
-
+import math
 import sys
+from math import pi
 
-def test():
-    # sys.argv 包含命令行参数
-    args = sys.argv
-    if len(args) == 1:
-        print("没有额外参数")
-    else:
-        print(f"参数: {args[1:]}")
+# 全大写变量通常表示常量，但 Python 不会强制禁止修改。
+PI = 3.14159
 
-# __name__ 变量
-# 当模块被直接运行时，__name__ 是 '__main__'
-# 当模块被 import 时，__name__ 是模块名
-if __name__ == '__main__':
-    test()
+# 单下划线开头表示“约定私有”，提醒外部代码不要直接使用。
+_INTERNAL_VERSION = "1.0"
 
-# 作用域
-# _xxx：约定私有（不建议外部访问）
-# __xxx：强制私有（名字改编）
-# xxx：公开
-
-def _private_func():
-    return "我是私有函数"
 
 def public_func():
     return "我是公开函数"
 
-PI = 3.14159   # 公开常量
-_INTERNAL = 42  # 私有常量
 
-# import 的几种方式
-# import math              # 导入整个模块
-# from math import sqrt    # 只导入 sqrt
-# from math import *       # 导入所有（不推荐！）
-# import math as m         # 起别名
+def _private_func():
+    return "我是约定私有函数"
 
-import math
-print(math.sqrt(16))       # 4.0
 
-from math import pi
-print(pi)                   # 3.141592653589793
+def show_import_examples():
+    print("=== import 的几种常见写法 ===")
+    # import math 后，需要通过模块名访问函数。
+    print(math.sqrt(16))
+
+    # from math import pi 后，可以直接使用 pi。
+    print(pi)
+
+
+def show_scope_examples():
+    print("\n=== 公开和约定私有 ===")
+    print(public_func())
+    # 约定私有不是语法禁止，只是社区约定。
+    print(_private_func())
+    print(PI)
+    print(_INTERNAL_VERSION)
+
+
+def main():
+    print("=== __name__ 和命令行参数 ===")
+    # 直接运行本文件时，__name__ 的值是 "__main__"。
+    print(__name__)
+
+    # sys.argv[0] 是脚本名，所以这里从第 1 个参数开始取。
+    args = sys.argv[1:]
+    if args:
+        print(f"参数: {args}")
+    else:
+        print("没有额外参数")
+
+    show_import_examples()
+    show_scope_examples()
+
+
+if __name__ == "__main__":
+    # 只有直接运行本文件时才执行 main()；被 import 时不会执行。
+    main()

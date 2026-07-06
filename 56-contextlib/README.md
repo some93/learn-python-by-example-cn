@@ -2,76 +2,84 @@
 
 ## 🎯 这一关你会学到
 
-- 理解上下文管理器的原理
-- 用 `@contextmanager` 简化上下文管理器
-- 用 `closing()` 包装只有 close() 的对象
-- 实现实用的上下文管理器
+- `with` 背后的 `__enter__` / `__exit__` 协议
+- 如何用 `@contextmanager` 快速写上下文管理器
+- `suppress()` 如何小范围忽略指定异常
+- `closing()` 如何给只有 `close()` 的对象补上上下文管理能力
+- `redirect_stdout()` 如何临时捕获输出
+- `ExitStack` 如何动态管理多个资源
 
 ## 🤔 先想一个问题
 
-写 `with open() as f:` 时，文件会自动关闭。但如果你有自己的资源（数据库连接、网络连接、计时器）也想用 `with` 自动管理，得写 `__enter__` 和 `__exit__` 两个方法，太麻烦了。`@contextmanager` 让你用一个函数就搞定。
+文件要关闭、连接要释放、锁要解开、临时输出要恢复。很多代码都有一个共同模式：
 
-带着这个问题，我们来看代码。
+1. 进入前做准备
+2. 中间执行业务
+3. 不管成功失败，最后都要清理
+
+`with` 就是为这个模式设计的。`contextlib` 则提供了一组工具，让你不用每次都手写完整类。
 
 ## 📖 看代码
 
 ```python
-# contextlib
+# contextlib 上下文管理工具
 
-from contextlib import contextmanager, closing
+from contextlib import ExitStack, closing, contextmanager, redirect_stdout, suppress
+from io import StringIO
 
-# 回顾：with 语句需要上下文管理器（__enter__ + __exit__）
-class MyResource:
+
+print("=== 手写上下文管理器 ===")
+
+
+class Resource:
+    def __init__(self, name):
+        self.name = name
+
     def __enter__(self):
-        print("打开资源")
+        # __enter__ 的返回值会绑定给 as 后面的变量。
+        print(f"打开 {self.name}")
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        print("关闭资源")
-        return False    # 不吞掉异常
+    def __exit__(self, exc_type, exc_value, traceback):
+        # __exit__ 无论 with 内部是否异常都会执行。
+        print(f"关闭 {self.name}")
+        return False
 
-with MyResource() as r:
-    print("使用资源")
 
-# 用 @contextmanager 简化！
+with Resource("文件") as resource:
+    print(f"使用 {resource.name}")
+
+
+print("\n=== @contextmanager 简化写法 ===")
+
+
 @contextmanager
-def my_resource():
-    print("打开资源")
+def managed_resource(name):
+    print(f"打开 {name}")
     try:
-        yield "资源对象"    # yield 之前是 __enter__
+        # yield 之前相当于 __enter__，yield 的值会交给 as 变量。
+        yield name
     finally:
-        print("关闭资源")    # yield 之后是 __exit__
+        # finally 里的代码相当于 __exit__，负责清理资源。
+        print(f"关闭 {name}")
 
-with my_resource() as r:
-    print(f"使用: {r}")
 
-# 实用例子：计时器
-import time
+with managed_resource("数据库连接") as name:
+    print(f"使用 {name}")
 
-@contextmanager
-def timer(name):
-    start = time.time()
-    yield
-    elapsed = time.time() - start
-    print(f"{name} 耗时: {elapsed:.3f}s")
 
-with timer("计算"):
-    total = sum(range(1000000))
-    print(f"结果: {total}")
+print("\n=== suppress 忽略指定异常 ===")
 
-# 实用例子：临时修改工作目录
-import os
+with suppress(ValueError):
+    # 只忽略指定异常，适合“失败也没关系”的小范围代码。
+    int("not-a-number")
 
-@contextmanager
-def change_dir(path):
-    old_dir = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(old_dir)
+print("程序继续执行")
 
-# closing()：为没有 __exit__ 的对象加上 close() 调用
+
+print("\n=== closing 自动调用 close() ===")
+
+
 class Connection:
     def __init__(self):
         print("连接已建立")
@@ -79,22 +87,48 @@ class Connection:
     def close(self):
         print("连接已关闭")
 
-with closing(Connection()) as conn:
-    print("使用连接")
-# 自动调用 conn.close()
+
+with closing(Connection()) as connection:
+    print(type(connection).__name__)
+
+
+print("\n=== redirect_stdout 捕获输出 ===")
+
+buffer = StringIO()
+
+# redirect_stdout 临时把 print 输出重定向到 file-like object。
+with redirect_stdout(buffer):
+    print("第一行")
+    print("第二行")
+
+print(buffer.getvalue().splitlines())
+
+
+print("\n=== ExitStack 管理多个资源 ===")
+
+with ExitStack() as stack:
+    # enter_context 可以动态进入多个上下文管理器。
+    first = stack.enter_context(managed_resource("缓存"))
+    second = stack.enter_context(managed_resource("日志"))
+    print(f"使用 {first} 和 {second}")
+
+# ExitStack 退出时会按后进先出的顺序清理资源。
+print("全部资源已释放")
 ```
 
-## 🔍 师兄给你逐行拆
+## 🔍 师兄给你拆开讲
 
-> 代码已经在注释中做了详细说明，这里挑重点讲。
+`with Resource("文件") as resource:` 会先调用 `__enter__()`，把返回值交给 `resource`，代码块结束后再调用 `__exit__()`。`__exit__()` 返回 `False` 表示不吞异常，让异常继续向外抛。
 
-### 核心要点
+`@contextmanager` 把生成器函数变成上下文管理器。`yield` 之前是进入逻辑，`yield` 的值是 `as` 后面的变量，`finally` 里写清理逻辑。
 
-- `@contextmanager` 装饰器把生成器函数变成上下文管理器
-- `yield` 之前是 `__enter__`，`yield` 之后是 `__exit__`
-- `yield` 的值就是 `with ... as x:` 中的 `x`
-- `closing(obj)` 会在 `with` 结束时自动调用 `obj.close()`
-- 上下文管理器适合管理任何「打开-使用-关闭」模式的资源
+`suppress(ValueError)` 只适合很小范围、明确可忽略的异常。不要用它包住一大段业务代码，否则真正的问题会被悄悄吞掉。
+
+`closing(obj)` 适合那些有 `close()` 方法但没有实现 `__enter__` / `__exit__` 的老对象或第三方对象。
+
+`redirect_stdout()` 可以临时把 `print()` 输出重定向到文件、内存缓冲区等 file-like object。测试命令行输出时很有用。
+
+`ExitStack` 适合“资源数量运行时才知道”的情况。它会按进入顺序记录清理动作，退出时按后进先出的顺序释放资源。
 
 ## 🏃 跑一下试试
 
@@ -103,23 +137,58 @@ cd 56-contextlib
 python contextlib_demo.py
 ```
 
-## 💡 师兄的碎碎念
+输出：
 
-- `@contextmanager` 装饰器把生成器函数变成上下文管理器
-- `yield` 之前是 `__enter__`，`yield` 之后是 `__exit__`
-- `yield` 的值就是 `with ... as x:` 中的 `x`
-- `closing(obj)` 会在 `with` 结束时自动调用 `obj.close()`
-- 上下文管理器适合管理任何「打开-使用-关闭」模式的资源
+```text
+=== 手写上下文管理器 ===
+打开 文件
+使用 文件
+关闭 文件
+
+=== @contextmanager 简化写法 ===
+打开 数据库连接
+使用 数据库连接
+关闭 数据库连接
+
+=== suppress 忽略指定异常 ===
+程序继续执行
+
+=== closing 自动调用 close() ===
+连接已建立
+Connection
+连接已关闭
+
+=== redirect_stdout 捕获输出 ===
+['第一行', '第二行']
+
+=== ExitStack 管理多个资源 ===
+打开 缓存
+打开 日志
+使用 缓存 和 日志
+关闭 日志
+关闭 缓存
+全部资源已释放
+```
+
+## 💡 师兄的提醒
+
+上下文管理器适合管理“成对动作”：打开/关闭、加锁/解锁、进入/恢复、开始/提交或回滚。
+
+如果只是想少写几行 `try/finally`，`@contextmanager` 很合适；如果资源的生命周期和状态比较复杂，手写类会更清楚。
 
 ## 🎓 这一关的知识点清单
 
 | 知识点 | 说明 |
 |--------|------|
+| `__enter__()` | 进入 `with` 时执行 |
+| `__exit__()` | 离开 `with` 时执行 |
 | `@contextmanager` | 用生成器函数创建上下文管理器 |
-| `yield` | 分隔 enter 和 exit 逻辑 |
-| `closing(obj)` | 自动调用 close() 的包装器 |
-| `__enter__ / __exit__` | 上下文管理器协议 |
+| `yield` | 分隔进入逻辑和退出逻辑 |
+| `suppress()` | 小范围忽略指定异常 |
+| `closing()` | 自动调用对象的 `close()` |
+| `redirect_stdout()` | 临时重定向标准输出 |
+| `ExitStack` | 动态管理多个上下文管理器 |
 
 ## ➡️ 下一关
 
-下一关我们学习 [requests](../57-requests/README.md)，继续加油！
+下一关：[requests](../57-requests/README.md)。
