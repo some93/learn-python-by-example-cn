@@ -2,74 +2,118 @@
 
 ## 🎯 这一关你会学到
 
-- 什么是 PyPI、pip 和第三方模块
-- 为什么推荐用 `python -m pip` 而不是直接裸写 `pip`
-- 如何用 `venv` 给项目创建独立虚拟环境
-- `requirements.txt` 如何记录和安装依赖
-- 安装依赖时常见的版本、环境、权限问题
+- 标准库、第三方模块、自己写的模块有什么区别
+- PyPI、pip、venv、requirements.txt 分别负责什么
+- 为什么推荐用 `python -m pip`，而不是直接写 `pip`
+- 一个项目从创建虚拟环境到记录依赖的完整流程
+- 为什么教程代码不直接联网安装第三方包
 
 ## 🤔 先想一个问题
 
-Python 标准库像手机出厂自带的应用：日历、相机、短信，够你完成很多基础任务。
+上一关我们学了模块：一个 `.py` 文件可以被 `import`，标准库里的 `math`、`sys` 也可以被 `import`。
 
-第三方模块像应用商店里的 App：要发 HTTP 请求，可以装 `requests`；要做漂亮命令行输出，可以装 `rich`；要做数据分析，可以装 `pandas`。
+但现实项目里，你还会用别人写好的模块，比如：
 
-但别把所有 App 都装进系统手机里。每个项目最好有自己的虚拟环境，就像每个项目一台独立手机，互不污染。
+- `requests`：发送 HTTP 请求；
+- `rich`：做漂亮的命令行输出；
+- `pandas`：处理表格数据；
+- `flask`：写 Web 服务。
+
+这些模块不是 Python 自带的，不能直接 `import`。你要先把它们安装到当前项目环境里。
+
+这一关讲的不是某一个包怎么用，而是这条链路：
+
+```text
+PyPI 上有包 -> pip 下载安装到虚拟环境 -> 代码里 import -> requirements.txt 记录依赖
+```
 
 ## 📖 看代码
 
 ```python
 # 安装第三方模块
 #
-# 这一关的命令需要在终端里执行，例如：
-# python -m pip install requests
-#
-# 为了保证示例代码离线也能运行，这里用内置 json 模块演示
-# “导入模块 -> 调用模块功能 -> 得到结果” 的流程。
-
-import json
+# 这一关真正要执行的安装命令在 README 里。
+# 这个脚本不联网、不安装包，只把依赖管理流程打印出来，方便你先理解顺序。
 
 
-print("=== 使用内置模块 json ===")
+print("=== 第三方模块从哪里来 ===")
 
-profile = {
-    "name": "Alice",
-    "age": 25,
-    "skills": ["Python", "Web"],
-}
+# PyPI 是 Python 第三方包仓库，pip 是下载和安装这些包的工具。
+package = "requests"
+print(f"想使用第三方模块 {package!r}")
+print("先确认当前项目使用哪个 Python，再用它调用 pip")
 
-json_text = json.dumps(profile, ensure_ascii=False, indent=2)
-print(json_text)
 
-parsed = json.loads(json_text)
-print(parsed["name"])
-print(parsed["skills"][0])
-print(type(parsed).__name__)
+print("\n=== 推荐的项目依赖管理流程 ===")
+
+steps = [
+    "1. 创建虚拟环境: python -m venv .venv",
+    "2. 激活虚拟环境: .venv\\Scripts\\Activate.ps1",
+    "3. 安装第三方包: python -m pip install requests",
+    "4. 在代码里导入: import requests",
+    "5. 记录依赖版本: python -m pip freeze > requirements.txt",
+    "6. 其他人安装依赖: python -m pip install -r requirements.txt",
+]
+
+for step in steps:
+    print(step)
 
 
 print("\n=== requirements.txt 示例 ===")
 
+# requirements.txt 是给项目记录依赖的清单，不是 Python 代码。
 requirements = [
     "requests==2.32.3",
     "rich==13.7.1",
 ]
 
 print("\n".join(requirements))
+
+
+print("\n=== 命令和代码的关系 ===")
+
+# 安装发生在终端；import 发生在 Python 代码里。
+examples = {
+    "终端安装": "python -m pip install requests",
+    "代码导入": "import requests",
+    "终端导出": "python -m pip freeze > requirements.txt",
+}
+
+for action, command in examples.items():
+    print(f"{action}: {command}")
 ```
 
-## 🔍 师兄给你逐行拆
+## 🔍 师兄给你拆开讲
 
-### 第三方模块装在哪里？
+### 先分清三类模块
+
+**自己写的模块**：项目里的 `.py` 文件，比如上一关的 `modules.py`。
+
+**标准库模块**：Python 自带的模块，比如 `math`、`json`、`datetime`、`sqlite3`。不用安装，直接 `import`。
+
+**第三方模块**：别人发布到 PyPI 的模块，比如 `requests`、`flask`、`rich`。使用前要先安装。
+
+所以顺序是：
+
+```text
+先安装 requests -> 再在代码里 import requests
+```
+
+不是反过来。
+
+### PyPI 和 pip 是什么关系？
+
+PyPI 可以理解成 Python 的应用商店。pip 是安装工具。
+
+你在终端执行：
 
 ```bash
 python -m pip install requests
 ```
 
-**这行在干嘛？**
+意思是：用当前这个 `python` 对应的 pip，到 PyPI 下载并安装 `requests`。
 
-这条命令会用当前 Python 解释器对应的 pip，从 PyPI 下载并安装 `requests`。
-
-**为什么推荐 `python -m pip`？**
+### 为什么写 `python -m pip`？
 
 很多电脑上可能同时有多个 Python：系统 Python、Anaconda、项目虚拟环境、Python 3.10、Python 3.12。
 
@@ -79,7 +123,7 @@ python -m pip install requests
 pip install requests
 ```
 
-你不一定知道它对应的是哪个 Python。
+你不一定知道这个 `pip` 属于哪个 Python。
 
 写成：
 
@@ -87,27 +131,27 @@ pip install requests
 python -m pip install requests
 ```
 
-意思更明确：用这个 `python` 对应的 pip 安装包。
+更明确：用当前这个 `python` 来运行 pip，包会装到当前 Python 对应的环境里。
 
----
+### 为什么要虚拟环境？
 
-### 虚拟环境：每个项目一套依赖
+不要把所有第三方包都装进全局 Python。项目 A 可能需要 `requests==2.31`，项目 B 可能需要 `requests==2.32`，全局安装很容易互相影响。
+
+更稳的流程是每个项目一个 `.venv`：
 
 ```bash
 python -m venv .venv
 ```
 
-**这行在干嘛？**
-
-在当前项目目录创建一个 `.venv` 文件夹，里面有独立的 Python 解释器和第三方包目录。
-
-激活虚拟环境：
+Windows PowerShell 激活：
 
 ```bash
-# Windows PowerShell
 .venv\Scripts\Activate.ps1
+```
 
-# macOS / Linux
+macOS / Linux 激活：
+
+```bash
 source .venv/bin/activate
 ```
 
@@ -117,50 +161,24 @@ source .venv/bin/activate
 deactivate
 ```
 
-**为什么要用虚拟环境？**
-
-项目 A 需要 `requests==2.31`，项目 B 需要 `requests==2.32`。如果都装到全局环境，很容易互相打架。
-
-虚拟环境就像给每个项目分配独立宿舍，谁也别把袜子扔到别人床上。
-
----
-
-### 安装、查看、卸载模块
+激活后再安装：
 
 ```bash
 python -m pip install requests
-python -m pip list
-python -m pip show requests
-python -m pip uninstall requests
 ```
 
-**这几行在干嘛？**
+### requirements.txt 是干什么的？
 
-- `install`：安装包；
-- `list`：列出当前环境安装了哪些包；
-- `show`：查看某个包的版本、位置、依赖；
-- `uninstall`：卸载包。
+你安装了哪些第三方包，别人不知道。`requirements.txt` 就是项目依赖清单。
 
-**容易踩的坑**
-
-安装失败时先确认三件事：
-
-- 当前虚拟环境有没有激活；
-- `python -m pip --version` 显示的路径是不是当前项目的 `.venv`；
-- 包名有没有拼错。
-
----
-
-### `requirements.txt` 记录依赖
+示例：
 
 ```text
 requests==2.32.3
 rich==13.7.1
 ```
 
-**这是什么？**
-
-`requirements.txt` 是一份依赖清单。别人拿到你的项目后，只需要执行：
+别人拿到你的项目后执行：
 
 ```bash
 python -m pip install -r requirements.txt
@@ -168,91 +186,84 @@ python -m pip install -r requirements.txt
 
 就能安装同一批依赖。
 
-**为什么要写版本号？**
+### pip freeze 要谨慎用
 
-如果只写：
-
-```text
-requests
-```
-
-下个月安装时可能拿到更新版本，行为可能变。写成 `requests==2.32.3`，可复现性更强。
-
----
-
-### `pip freeze` 能导出依赖，但别盲信
+常见命令：
 
 ```bash
 python -m pip freeze > requirements.txt
 ```
 
-**这行在干嘛？**
+它会把当前环境里的所有包导出。问题是：如果你的环境不干净，里面有很多和项目无关的包，也会一起写进去。
 
-把当前环境里的所有包和版本导出到 `requirements.txt`。
-
-**容易踩的坑**
-
-如果你的环境很脏，里面装了一堆和项目无关的包，`pip freeze` 会一起导出来。更好的习惯是：
+更好的习惯是：
 
 1. 先创建干净虚拟环境；
 2. 只安装项目真正需要的包；
-3. 再导出依赖。
+3. 再导出或手写 `requirements.txt`。
 
----
+### 为什么示例脚本不真的安装 requests？
 
-### 示例代码为什么用 `json`？
+安装第三方包需要网络，也会改变你的 Python 环境。教程示例应该尽量可重复、可离线运行。
 
-```python
-import json
-```
-
-**这行在干嘛？**
-
-`json` 是 Python 标准库，不需要安装。这里用它演示模块的使用流程：导入模块、调用函数、处理返回值。
-
-教程示例应该尽量离线可运行。如果示例直接 `import requests`，但你还没联网安装，程序就会报错。安装第三方模块的命令放在 README 里讲，代码文件保持稳定运行。
+所以这一章的 `.py` 文件只打印正确流程；真正会修改环境的命令放在 README 里，由你在自己的项目里按需执行。
 
 ## 🏃 跑一下试试
 
 ```bash
-$ python install-modules.py
-=== 使用内置模块 json ===
-{
-  "name": "Alice",
-  "age": 25,
-  "skills": [
-    "Python",
-    "Web"
-  ]
-}
-Alice
-Python
-dict
+cd 28-install-modules
+python install-modules.py
+```
+
+输出：
+
+```text
+=== 第三方模块从哪里来 ===
+想使用第三方模块 'requests'
+先确认当前项目使用哪个 Python，再用它调用 pip
+
+=== 推荐的项目依赖管理流程 ===
+1. 创建虚拟环境: python -m venv .venv
+2. 激活虚拟环境: .venv\Scripts\Activate.ps1
+3. 安装第三方包: python -m pip install requests
+4. 在代码里导入: import requests
+5. 记录依赖版本: python -m pip freeze > requirements.txt
+6. 其他人安装依赖: python -m pip install -r requirements.txt
 
 === requirements.txt 示例 ===
 requests==2.32.3
 rich==13.7.1
+
+=== 命令和代码的关系 ===
+终端安装: python -m pip install requests
+代码导入: import requests
+终端导出: python -m pip freeze > requirements.txt
 ```
 
-## 💡 师兄的碎碎念
+## 💡 师兄的提醒
 
-- 推荐用 `python -m pip ...`，避免 pip 和 Python 解释器对不上。
-- 每个项目都建一个 `.venv`，不要把依赖全装进全局 Python。
-- `requirements.txt` 记录依赖，`python -m pip install -r requirements.txt` 安装依赖。
-- 版本号写得越明确，项目越容易复现。
-- 教程代码尽量不要依赖网络和第三方包是否已安装，命令说明和可运行代码要分开。
+安装第三方模块时，先问三个问题：
+
+- 我现在用的是哪个 Python？
+- 我有没有在项目虚拟环境里？
+- 这个依赖要不要写进 `requirements.txt`？
+
+把这三个问题养成习惯，后面很多“我这里能跑，你那里不能跑”的环境问题会少很多。
 
 ## 🎓 这一关的知识点清单
 
-- **PyPI**：Python 第三方包仓库。
-- **pip**：Python 包安装工具，推荐通过 `python -m pip` 调用。
-- **venv**：Python 标准库提供的虚拟环境工具。
-- **requirements.txt**：记录项目依赖和版本的文本文件。
-- **install/list/show/uninstall**：pip 的常用子命令。
-- **可复现环境**：用虚拟环境和固定版本降低“我这里能跑你那里不能跑”的概率。
+| 知识点 | 说明 |
+|--------|------|
+| 标准库 | Python 自带模块，不需要安装 |
+| 第三方模块 | PyPI 上别人发布的包，使用前要安装 |
+| PyPI | Python 第三方包仓库 |
+| pip | Python 包安装工具 |
+| `python -m pip` | 用当前 Python 对应的 pip |
+| venv | 给项目创建独立虚拟环境 |
+| `requirements.txt` | 项目依赖清单 |
+| `pip install -r` | 按清单安装依赖 |
+| `pip freeze` | 导出当前环境依赖 |
 
 ## ➡️ 下一关
 
-模块和依赖搞定后，我们进入面向对象编程。下一关看类和实例：如何把数据和行为打包成对象 👉 [下一关：类和实例 →](../29-classes-and-instances/)
-
-
+模块和依赖搞清楚后，我们进入面向对象编程。下一关：[类和实例](../29-classes-and-instances/)。
