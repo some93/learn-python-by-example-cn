@@ -83,25 +83,25 @@ def main():
 
     print("=== GET 路由 ===")
     response = client.get("/")
-    print(response.status_code, response.get_data(as_text=True))
+    print(response.status_code, response.get_data(as_text=True))  # 200 欢迎使用 Flask
 
     response = client.get("/hello/Alice")
-    print(response.status_code, response.get_data(as_text=True))
+    print(response.status_code, response.get_data(as_text=True))  # 200 Hello, Alice
 
     print("\n=== 查询参数和 JSON 响应 ===")
     response = client.get("/greet?name=Bob")
-    print(response.status_code, response.get_json())
+    print(response.status_code, response.get_json())  # 200 {'message': 'Hello, Bob'}
 
     print("\n=== POST JSON ===")
     response = client.post("/api/users", json={"name": "Charlie"})
-    print(response.status_code, response.get_json())
+    print(response.status_code, response.get_json())  # 201 {'id': 1, 'name': 'Charlie'}
 
     response = client.post("/api/users", json={})
-    print(response.status_code, response.get_json())
+    print(response.status_code, response.get_json())  # 400 {'error': 'name is required'}
 
     print("\n=== 404 错误处理 ===")
     response = client.get("/missing")
-    print(response.status_code, response.get_json())
+    print(response.status_code, response.get_json())  # 404 {'error': 'not found'}
 
 
 if __name__ == "__main__":

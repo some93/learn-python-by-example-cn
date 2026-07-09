@@ -19,7 +19,7 @@ thread = threading.Thread(target=task, args=("Worker-1",), name="Worker-1")
 thread.start()
 # join 等待线程结束。
 thread.join()
-print(thread.is_alive())
+print(thread.is_alive())  # False
 
 
 print("\n=== 共享变量的数据竞争 ===")
@@ -44,7 +44,7 @@ t1.start()
 t2.start()
 t1.join()
 t2.join()
-print(counter)
+print(counter)  # 1
 
 
 print("\n=== 用 Lock 保护共享变量 ===")
@@ -67,7 +67,7 @@ t1.start()
 t2.start()
 t1.join()
 t2.join()
-print(counter)
+print(counter)  # 2
 
 
 print("\n=== 多线程适合 IO 等待 ===")

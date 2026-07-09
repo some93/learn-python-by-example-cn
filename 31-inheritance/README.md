@@ -47,8 +47,8 @@ class Cat(Animal):
 
 dog = Dog("旺财")
 cat = Cat("咪咪")
-dog.run()
-cat.run()
+dog.run()  # 旺财 is running fast...
+cat.run()  # 咪咪 is walking quietly...
 
 
 print("\n=== super() 调用父类方法 ===")
@@ -65,17 +65,17 @@ class Tortoise(Animal):
 
 
 tortoise = Tortoise("龟仙人", 0.2)
-tortoise.run()
+tortoise.run()  # 龟仙人 is running slowly at 0.2 m/s...
 
 
 print("\n=== isinstance 和 issubclass ===")
 
 # 子类实例同时也是父类实例。
-print(isinstance(dog, Dog))
-print(isinstance(dog, Animal))
-print(isinstance(dog, Cat))
-print(issubclass(Dog, Animal))
-print(issubclass(Dog, object))
+print(isinstance(dog, Dog))  # True
+print(isinstance(dog, Animal))  # True
+print(isinstance(dog, Cat))  # False
+print(issubclass(Dog, Animal))  # True
+print(issubclass(Dog, object))  # True
 
 
 print("\n=== 多态 ===")
@@ -87,9 +87,9 @@ def run_twice(animal):
     animal.run()
 
 
-run_twice(Dog("小黑"))
-run_twice(Cat("小花"))
-run_twice(Tortoise("慢慢", 0.1))
+run_twice(Dog("小黑"))  # 小黑 is running fast... / 小黑 is running fast...
+run_twice(Cat("小花"))  # 小花 is walking quietly... / 小花 is walking quietly...
+run_twice(Tortoise("慢慢", 0.1))  # 慢慢 is running slowly at 0.1 m/s... / 慢慢 is running slowly at 0.1 m/s...
 
 
 print("\n=== 鸭子类型 ===")
@@ -101,7 +101,7 @@ class Timer:
         print("Timer is ticking...")
 
 
-run_twice(Timer())
+run_twice(Timer())  # Timer is ticking... / Timer is ticking...
 ```
 
 ## 🔍 师兄给你逐行拆

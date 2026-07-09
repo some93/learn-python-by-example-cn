@@ -17,7 +17,7 @@
 ```python
 # 创建元组
 t = (1, 2, 3)
-print(t)
+print(t)           # (1, 2, 3)
 print(t[0])       # 1
 print(t[-1])      # 3
 print(len(t))     # 3
@@ -33,18 +33,18 @@ print(type(t2))   # <class 'int'>
 
 # 元组的"可变"陷阱
 t3 = ('a', 'b', ['X', 'Y'])
-print("修改前:", t3)
+print("修改前:", t3)  # 修改前: ('a', 'b', ['X', 'Y'])
 t3[2][0] = 'M'
 t3[2][1] = 'N'
-print("修改后:", t3)
+print("修改后:", t3)  # 修改后: ('a', 'b', ['M', 'N'])
 
 # 解包
 x, y, z = (10, 20, 30)
-print(x, y, z)
+print(x, y, z)    # 10 20 30
 
 # tuple 可以作为 dict 的 key
 d = {(1, 2): "point A", (3, 4): "point B"}
-print(d[(1, 2)])
+print(d[(1, 2)])  # point A
 ```
 
 ## 🔍 师兄给你逐行拆

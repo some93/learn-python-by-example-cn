@@ -15,17 +15,17 @@
 
 ```python
 # 转义字符
-print("hello\nworld")       # \n 换行
-print("hello\tworld")       # \t 制表符
-print("hello\\world")       # \\ 表示一个反斜杠
+print("hello\nworld")       # 输出两行：hello / world
+print("hello\tworld")       # hello	world
+print("hello\\world")       # hello\world
 
 # r'' 原始字符串：不转义
-print(r"hello\nworld")      # 原样输出 hello\nworld
+print(r"hello\nworld")      # hello\nworld
 
 # '''...''' 多行字符串
 print('''第一行
 第二行
-第三行''')
+第三行''')              # 输出三行：第一行 / 第二行 / 第三行
 
 # ord() 和 chr()：字符与编码互转
 print(ord('A'))     # 65
@@ -45,9 +45,9 @@ print(len('中文'.encode('utf-8')))   # 6（字节数）
 # 格式化：f-string（推荐！）
 name = "Charlie"
 age = 35
-print(f"Hello, {name}. You are {age} years old.")
-print(f"计算结果: {1 + 2 + 3}")
-print(f"保留两位小数: {3.14159:.2f}")
+print(f"Hello, {name}. You are {age} years old.")  # Hello, Charlie. You are 35 years old.
+print(f"计算结果: {1 + 2 + 3}")  # 计算结果: 6
+print(f"保留两位小数: {3.14159:.2f}")  # 保留两位小数: 3.14
 ```
 
 ## 🔍 师兄给你逐行拆

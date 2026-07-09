@@ -13,7 +13,7 @@ def calc(a, b):
     return a + b
 
 
-print(calc(1, 2))
+print(calc(1, 2))  # DEBUG: a=1, b=2 / 3
 
 
 print("\n=== assert 断言 ===")
@@ -25,12 +25,12 @@ def div(a, b):
     return a / b
 
 
-print(div(10, 2))
+print(div(10, 2))  # 5.0
 
 try:
     div(10, 0)
 except AssertionError as error:
-    print(type(error).__name__, error)
+    print(type(error).__name__, error)  # AssertionError 除数不能为零
 
 
 print("\n=== logging 日志 ===")
@@ -62,7 +62,7 @@ def process_data(data):
     return result
 
 
-print(process_data(["1", "2", "abc", "4"]))
+print(process_data(["1", "2", "abc", "4"]))  # [1, 2, 4]
 
 
 print("\n=== pdb 和 IDE 调试 ===")

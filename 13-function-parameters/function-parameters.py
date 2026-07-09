@@ -48,18 +48,18 @@ print(calc_sum(*nums))            # 10（用 * 解包）
 def person(name, age, **kwargs):
     print(f"name: {name}, age: {age}, other: {kwargs}")
 
-person("Alice", 25)
-person("Bob", 30, city="Beijing", job="Engineer")
+person("Alice", 25)  # name: Alice, age: 25, other: {}
+person("Bob", 30, city="Beijing", job="Engineer")  # name: Bob, age: 30, other: {'city': 'Beijing', 'job': 'Engineer'}
 
 # 5. 命名关键字参数（*, 后面的参数必须用名字传）
 def person2(name, age, *, city, job):
     print(f"{name}, {age}, {city}, {job}")
 
-person2("Charlie", 35, city="Shanghai", job="Teacher")
+person2("Charlie", 35, city="Shanghai", job="Teacher")  # Charlie, 35, Shanghai, Teacher
 # person2("Charlie", 35, "Shanghai", "Teacher")  # TypeError!
 
 # 参数组合顺序：位置参数 → 默认参数 → *args → 命名关键字 → **kwargs
 def f(a, b=0, *args, keyword_only, **kwargs):
     print(f"a={a}, b={b}, args={args}, keyword_only={keyword_only}, kwargs={kwargs}")
 
-f(1, 2, 3, 4, keyword_only="yes", extra="data")
+f(1, 2, 3, 4, keyword_only="yes", extra="data")  # a=1, b=2, args=(3, 4), keyword_only=yes, kwargs={'extra': 'data'}

@@ -29,25 +29,25 @@ def is_odd(n):
 
 # filter 返回惰性迭代器，只保留函数返回真值的元素。
 result = filter(is_odd, [1, 2, 3, 4, 5, 6])
-print(type(result).__name__)
-print(list(result))
+print(type(result).__name__)  # filter
+print(list(result))           # [1, 3, 5]
 # filter 结果消费完之后不能重复使用。
-print(list(result))
+print(list(result))           # []
 
 
 print("\n=== filter 和列表生成式对比 ===")
 
 numbers = range(1, 11)
 # 简单过滤时，列表生成式通常更容易读。
-print(list(filter(is_odd, numbers)))
-print([n for n in range(1, 11) if is_odd(n)])
+print(list(filter(is_odd, numbers)))       # [1, 3, 5, 7, 9]
+print([n for n in range(1, 11) if is_odd(n)])  # [1, 3, 5, 7, 9]
 
 
 print("\n=== filter(None, iterable) ===")
 
 mixed = [0, 1, "", "Python", [], [1], None, True, False]
 # 函数传 None 时，会自动过滤掉所有假值。
-print(list(filter(None, mixed)))
+print(list(filter(None, mixed)))  # [1, 'Python', [1], True]
 
 
 print("\n=== 删除空字符串 ===")
@@ -59,7 +59,7 @@ def not_empty(text):
 
 
 items = ["A", "", "B", None, "C", "  "]
-print(list(filter(not_empty, items)))
+print(list(filter(not_empty, items)))  # ['A', 'B', 'C']
 
 
 print("\n=== 用 filter 求素数 ===")
@@ -90,7 +90,7 @@ def primes():
 
 p = primes()
 first_primes = [next(p) for _ in range(20)]
-print(first_primes)
+print(first_primes)  # [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71]
 ```
 
 ## 🔍 师兄给你逐行拆

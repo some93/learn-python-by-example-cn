@@ -64,12 +64,12 @@ if __name__ == "__main__":
 
     print("=== TCP 客户端连接服务器 ===")
     response = tcp_client(port)
-    print(f"客户端收到: {response}")
+    print(f"客户端收到: {response}")  # 客户端收到: ACK: Hello, TCP Server!
 
     server_thread.join()
 
     print("\n=== TCP 服务器处理结果 ===")
-    while not server_logs.empty():
+    while not server_logs.empty():      # 依次输出：服务器收到: Hello, TCP Server! / 服务器已回复
         print(server_logs.get())
 
-    print("\n通信完成")
+    print("\n通信完成")  # 通信完成

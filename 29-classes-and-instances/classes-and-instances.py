@@ -32,43 +32,43 @@ bart = Student("Bart Simpson", 59)
 lisa = Student("Lisa Simpson", 87)
 
 # 调用实例方法时，Python 会自动把实例作为 self 传进去。
-bart.print_score()
-lisa.print_score()
-print(f"{bart.name} 的等级: {bart.get_grade()}")
-print(f"{lisa.name} 的等级: {lisa.get_grade()}")
+bart.print_score()  # Bart Simpson: 59
+lisa.print_score()  # Lisa Simpson: 87
+print(f"{bart.name} 的等级: {bart.get_grade()}")  # Bart Simpson 的等级: C
+print(f"{lisa.name} 的等级: {lisa.get_grade()}")  # Lisa Simpson 的等级: B
 
 
 print("\n=== self 是实例自身 ===")
 
 # 下面这行等价于 bart.print_score()，只是手动把 bart 传给 self。
-Student.print_score(bart)
+Student.print_score(bart)  # Bart Simpson: 59
 bart.update_score(75)
-bart.print_score()
-print(bart.get_grade())
+bart.print_score()  # Bart Simpson: 75
+print(bart.get_grade())  # B
 
 
 print("\n=== 实例属性和类属性 ===")
 
-print(bart.name)
+print(bart.name)  # Bart Simpson
 # 实例找不到 school 时，会继续去类上找。
-print(bart.school)
-print(lisa.school)
+print(bart.school)  # Springfield School
+print(lisa.school)  # Springfield School
 
 # 修改类属性会影响还没有被实例属性遮蔽的所有实例。
 Student.school = "Python School"
-print(bart.school)
-print(lisa.school)
+print(bart.school)  # Python School
+print(lisa.school)  # Python School
 
 
 print("\n=== 动态绑定实例属性 ===")
 
 # Python 普通类的实例默认可以随时新增属性。
 bart.age = 10
-print(bart.age)
-print(hasattr(lisa, "age"))
+print(bart.age)  # 10
+print(hasattr(lisa, "age"))  # False
 
 
 print("\n=== 类型判断 ===")
 
-print(type(bart).__name__)
-print(isinstance(bart, Student))
+print(type(bart).__name__)  # Student
+print(isinstance(bart, Student))  # True

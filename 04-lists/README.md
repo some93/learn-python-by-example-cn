@@ -18,7 +18,7 @@
 ```python
 # 创建列表
 classmates = ['Michael', 'Bob', 'Tracy']
-print(classmates)
+print(classmates)         # ['Michael', 'Bob', 'Tracy']
 print(len(classmates))    # 3
 
 # 索引访问：正索引从 0 开始，负索引从 -1 开始
@@ -28,18 +28,18 @@ print(classmates[-1])     # Tracy
 # 追加、插入、删除
 classmates.append('Adam')
 classmates.insert(1, 'Jack')
-print(classmates)
+print(classmates)         # ['Michael', 'Jack', 'Bob', 'Tracy', 'Adam']
 classmates.pop()          # 删除末尾
 classmates.pop(1)         # 删除指定位置
-print(classmates)
+print(classmates)         # ['Michael', 'Bob', 'Tracy']
 
 # 替换元素
 classmates[1] = 'Sarah'
-print(classmates)
+print(classmates)         # ['Michael', 'Sarah', 'Tracy']
 
 # 混装不同类型
 mixed = ['Apple', 123, True, None, [1, 2, 3]]
-print(mixed)
+print(mixed)              # ['Apple', 123, True, None, [1, 2, 3]]
 
 # 嵌套列表（二维列表）
 matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
@@ -48,7 +48,7 @@ print(matrix[1][2])    # 6
 # 排序和查找
 nums = [3, 1, 4, 1, 5, 9]
 nums.sort()
-print(nums)
+print(nums)            # [1, 1, 3, 4, 5, 9]
 print(3 in nums)       # True
 ```
 

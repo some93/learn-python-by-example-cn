@@ -46,14 +46,14 @@ with sqlite3.connect(":memory:") as conn:
         )
         """
     )
-    print("users")
+    print("users")  # users
 
     print("\n=== 插入和批量插入 ===")
     cursor.execute(
         "INSERT INTO users (name, age, email) VALUES (?, ?, ?)",
         ("Alice", 25, "alice@example.com"),
     )
-    print(cursor.lastrowid)
+    print(cursor.lastrowid)  # 1
 
     users = [
         ("Bob", 30, "bob@example.com"),
@@ -66,18 +66,18 @@ with sqlite3.connect(":memory:") as conn:
 
     print("\n=== 查询数据 ===")
     cursor.execute("SELECT id, name, age FROM users ORDER BY id")
-    print_rows("所有用户:", cursor.fetchall())
+    print_rows("所有用户:", cursor.fetchall())  # 所有用户: / {'id': 1, 'name': 'Alice', 'age': 25} / {'id': 2, 'name': 'Bob', 'age': 30} / {'id': 3, 'name': 'Charlie', 'age': 28} / {'id': 4, 'name': 'Diana', 'age': 22}
 
     print("\n=== 参数化查询 ===")
     min_age = 26
     cursor.execute("SELECT name, age FROM users WHERE age >= ? ORDER BY age", (min_age,))
-    print_rows("年龄大于等于 26:", cursor.fetchall())
+    print_rows("年龄大于等于 26:", cursor.fetchall())  # 年龄大于等于 26: / {'name': 'Charlie', 'age': 28} / {'name': 'Bob', 'age': 30}
 
     print("\n=== 更新和删除 ===")
     cursor.execute("UPDATE users SET age = ? WHERE name = ?", (26, "Alice"))
     cursor.execute("DELETE FROM users WHERE name = ?", ("Diana",))
     cursor.execute("SELECT name, age FROM users ORDER BY id")
-    print_rows("更新后:", cursor.fetchall())
+    print_rows("更新后:", cursor.fetchall())  # 更新后: / {'name': 'Alice', 'age': 26} / {'name': 'Bob', 'age': 30} / {'name': 'Charlie', 'age': 28}
 
     # 先提交前面的正常修改，后面的回滚示例才不会影响已完成的数据。
     conn.commit()
@@ -87,7 +87,7 @@ with sqlite3.connect(":memory:") as conn:
 
     # 参数化查询会把输入当作普通值，不会拼进 SQL 结构里。
     cursor.execute("SELECT COUNT(*) AS count FROM users WHERE name = ?", (user_input,))
-    print(cursor.fetchone()["count"])
+    print(cursor.fetchone()["count"])  # 0
 
     print("\n=== 事务回滚 ===")
     try:
@@ -102,16 +102,16 @@ with sqlite3.connect(":memory:") as conn:
                 ("Evil Twin", 36, "eve@example.com"),
             )
     except sqlite3.IntegrityError as error:
-        print(type(error).__name__)
+        print(type(error).__name__)  # IntegrityError
 
     cursor.execute("SELECT name FROM users WHERE email = ?", ("eve@example.com",))
-    print(cursor.fetchall())
+    print(cursor.fetchall())  # []
 
     print("\n=== 按列名访问 Row ===")
     cursor.execute("SELECT * FROM users WHERE name = ?", ("Alice",))
     row = cursor.fetchone()
-    print(row["name"])
-    print(row["age"])
+    print(row["name"])  # Alice
+    print(row["age"])  # 26
 ```
 
 ## 🔍 师兄给你拆开讲

@@ -12,7 +12,7 @@ def child_task(name):
 def main():
     print("=== 当前进程 ===", flush=True)
     # getpid() 返回当前进程 ID。
-    print(os.getpid() > 0, flush=True)
+    print(os.getpid() > 0, flush=True)  # True
 
     print("\n=== Process 创建子进程 ===", flush=True)
     # target 指定子进程要执行的函数，args 传入函数参数。
@@ -20,7 +20,7 @@ def main():
     process.start()
     # join 等待子进程结束，避免主进程提前退出。
     process.join()
-    print(process.exitcode, flush=True)
+    print(process.exitcode, flush=True)  # 0
 
     print("\n=== 主进程继续执行 ===", flush=True)
     print("子进程已结束", flush=True)

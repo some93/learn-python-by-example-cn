@@ -2,7 +2,7 @@
 
 # 创建元组
 t = (1, 2, 3)
-print(t)
+print(t)           # (1, 2, 3)
 print(t[0])       # 1
 print(t[-1])      # 3
 print(len(t))     # 3
@@ -24,10 +24,10 @@ print(len(t0))    # 0
 # tuple 的"可变"陷阱
 # tuple 中如果包含 list，list 的内容可以修改
 t3 = ('a', 'b', ['X', 'Y'])
-print("修改前:", t3)
+print("修改前:", t3)  # 修改前: ('a', 'b', ['X', 'Y'])
 t3[2][0] = 'M'    # 修改的是 list 内部，不是 tuple 本身
 t3[2][1] = 'N'
-print("修改后:", t3)
+print("修改后:", t3)  # 修改后: ('a', 'b', ['M', 'N'])
 
 # 解包（unpacking）
 x, y, z = (10, 20, 30)

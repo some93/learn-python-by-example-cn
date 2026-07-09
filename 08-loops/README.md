@@ -17,7 +17,7 @@
 ```python
 # for...in 循环
 names = ['Michael', 'Bob', 'Tracy']
-for name in names:
+for name in names:                 # 依次输出：Hello, Michael! / Hello, Bob! / Hello, Tracy!
     print(f"Hello, {name}!")
 
 # range() 生成整数序列
@@ -29,23 +29,23 @@ print()
 total = 0
 for i in range(1, 101):
     total += i
-print(f"1+2+...+100 = {total}")
+print(f"1+2+...+100 = {total}")  # 1+2+...+100 = 5050
 
 # while 循环
 n = 10
-while n > 0:
+while n > 0:                      # 10 9 8 7 6 5 4 3 2 1
     print(n, end=" ")
     n -= 1
 print()
 
 # break 和 continue
-for i in range(10):
+for i in range(10):               # 0 1 2 3 4
     if i == 5:
         break           # 到 5 就停
     print(i, end=" ")
 print()
 
-for i in range(10):
+for i in range(10):               # 1 3 5 7 9
     if i % 2 == 0:
         continue        # 跳过偶数
     print(i, end=" ")
@@ -56,7 +56,7 @@ for i in range(5):
     if i == 99:
         break
 else:
-    print("循环正常结束，没有被 break")
+    print("循环正常结束，没有被 break")  # 循环正常结束，没有被 break
 ```
 
 ## 🔍 师兄给你逐行拆

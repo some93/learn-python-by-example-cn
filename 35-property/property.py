@@ -11,7 +11,7 @@ class BadStudent:
 bad = BadStudent()
 # 直接暴露属性时，外部可以写入明显不合理的值。
 bad.score = 9999
-print(bad.score)
+print(bad.score)  # 9999
 
 
 print("\n=== 老式 getter/setter ===")
@@ -32,7 +32,7 @@ class OldStudent:
 
 old = OldStudent()
 old.set_score(88)
-print(old.get_score())
+print(old.get_score())  # 88
 
 
 print("\n=== @property 读写属性 ===")
@@ -56,12 +56,12 @@ class Student:
 
 student = Student()
 student.score = 90
-print(student.score)
+print(student.score)  # 90
 
 try:
     student.score = 120
 except ValueError as error:
-    print(error)
+    print(error)  # 分数必须在 0-100 之间
 
 
 print("\n=== 只读属性和计算属性 ===")
@@ -84,10 +84,10 @@ class Person:
 
 
 person = Person(2000, 2026)
-print(person.birth_year)
-print(person.age)
+print(person.birth_year)  # 2000
+print(person.age)  # 26
 
 try:
     person.age = 30
 except AttributeError as error:
-    print(type(error).__name__)
+    print(type(error).__name__)  # AttributeError

@@ -18,16 +18,16 @@
 L = ['Michael', 'Sarah', 'Tracy', 'Bob', 'Jack']
 
 # 基本切片
-print(L[0:3])      # 前3个
-print(L[1:3])      # 第2到第3个
-print(L[:3])       # 省略 start = 从头开始
-print(L[-2:])      # 后2个
-print(L[:])        # 完整复制
+print(L[0:3])      # ['Michael', 'Sarah', 'Tracy']（前3个）
+print(L[1:3])      # ['Sarah', 'Tracy']（第2到第3个）
+print(L[:3])       # ['Michael', 'Sarah', 'Tracy']（省略 start = 从头开始）
+print(L[-2:])      # ['Bob', 'Jack']（后2个）
+print(L[:])        # ['Michael', 'Sarah', 'Tracy', 'Bob', 'Jack']（完整复制）
 
 # 带步长
 L2 = list(range(10))
-print(L2[::2])     # 每隔一个取
-print(L2[::-1])    # 反转！
+print(L2[::2])     # [0, 2, 4, 6, 8]（每隔一个取）
+print(L2[::-1])    # [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]（反转！）
 
 # 字符串切片
 s = 'ABCDEFG'
@@ -35,12 +35,12 @@ print(s[:3])       # 'ABC'
 print(s[::-1])     # 'GFEDCBA'
 
 # 切片不越界
-print(L[0:100])    # 不报错，取到末尾
+print(L[0:100])    # ['Michael', 'Sarah', 'Tracy', 'Bob', 'Jack']（不报错，取到末尾）
 
 # 切片复制（浅拷贝）
 copy = L[:]
 copy[0] = 'Changed'
-print(f"original: {L[0]}")  # 不受影响
+print(f"original: {L[0]}")  # original: Michael（不受影响）
 ```
 
 ## 🔍 师兄给你逐行拆

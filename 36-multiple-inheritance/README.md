@@ -67,17 +67,17 @@ class Duck(Bird, FlyableMixin, SwimmableMixin):
     pass
 
 
-Dog().run()
-Parrot().fly()
+Dog().run()  # Dog is running...
+Parrot().fly()  # Parrot is flying...
 duck = Duck()
-duck.fly()
-duck.swim()
+duck.fly()  # Duck is flying...
+duck.swim()  # Duck is swimming...
 
 
 print("\n=== MRO 方法解析顺序 ===")
 
 # __mro__ 表示方法查找顺序，多重继承时尤其重要。
-print([cls.__name__ for cls in Duck.__mro__])
+print([cls.__name__ for cls in Duck.__mro__])  # ['Duck', 'Bird', 'Animal', 'FlyableMixin', 'SwimmableMixin', 'object']
 
 
 class A:
@@ -101,8 +101,8 @@ class D(B, C):
 
 
 d = D()
-d.hello()
-print([cls.__name__ for cls in D.__mro__])
+d.hello()  # hello from B
+print([cls.__name__ for cls in D.__mro__])  # ['D', 'B', 'C', 'A', 'object']
 
 
 print("\n=== 改变继承顺序会改变查找顺序 ===")
@@ -114,8 +114,8 @@ class E(C, B):
 
 
 e = E()
-e.hello()
-print([cls.__name__ for cls in E.__mro__])
+e.hello()  # hello from C
+print([cls.__name__ for cls in E.__mro__])  # ['E', 'C', 'B', 'A', 'object']
 ```
 
 ## 🔍 师兄给你逐行拆

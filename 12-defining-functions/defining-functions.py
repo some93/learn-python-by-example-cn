@@ -4,14 +4,14 @@
 def greet(name):
     print(f"Hello, {name}!")
 
-greet("World")
+greet("World")  # Hello, World!
 
 # 带返回值的函数
 def add(a, b):
     return a + b
 
 result = add(1, 2)
-print(f"1 + 2 = {result}")
+print(f"1 + 2 = {result}")  # 1 + 2 = 3
 
 # 没有 return 时，函数返回 None
 def do_nothing():
@@ -26,7 +26,7 @@ def move(x, y, step):
     return new_x, new_y
 
 x, y = move(100, 200, 50)
-print(f"新坐标: ({x}, {y})")
+print(f"新坐标: ({x}, {y})")  # 新坐标: (150, 250)
 
 # 参数类型检查
 def my_abs(x):

@@ -11,12 +11,12 @@ Month = Enum(
     ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
 )
 
-print(Month.Jan)
-print(Month.Jan.name)
+print(Month.Jan)  # Month.Jan
+print(Month.Jan.name)  # Jan
 # 默认 value 从 1 开始递增。
-print(Month.Jan.value)
-print(Month["Jan"])
-print(Month(1))
+print(Month.Jan.value)  # 1
+print(Month["Jan"])  # Month.Jan
+print(Month(1))  # Month.Jan
 
 
 print("\n=== 继承 Enum 定义枚举 ===")
@@ -35,12 +35,12 @@ class Weekday(Enum):
 
 
 day = Weekday.Sat
-print(day)
-print(day.name)
-print(day.value)
+print(day)  # Weekday.Sat
+print(day.name)  # Sat
+print(day.value)  # 6
 # 可以按名字或按值反向获取枚举成员。
-print(Weekday["Sat"])
-print(Weekday(6))
+print(Weekday["Sat"])  # Weekday.Sat
+print(Weekday(6))  # Weekday.Sat
 
 
 print("\n=== 遍历枚举 ===")
@@ -52,11 +52,11 @@ for member in Weekday:
 
 print("\n=== 枚举比较 ===")
 
-print(Weekday.Mon == Weekday.Mon)
-print(Weekday.Mon == Weekday.Tue)
-print(Weekday.Mon is Weekday.Mon)
+print(Weekday.Mon == Weekday.Mon)  # True
+print(Weekday.Mon == Weekday.Tue)  # False
+print(Weekday.Mon is Weekday.Mon)  # True
 # 普通 Enum 不会直接等于它的 value。
-print(Weekday.Mon == 1)
+print(Weekday.Mon == 1)  # False
 
 
 print("\n=== IntEnum 可以和整数比较 ===")
@@ -69,8 +69,8 @@ class HttpStatus(IntEnum):
     SERVER_ERROR = 500
 
 
-print(HttpStatus.OK == 200)
-print(HttpStatus.NOT_FOUND > HttpStatus.OK)
+print(HttpStatus.OK == 200)  # True
+print(HttpStatus.NOT_FOUND > HttpStatus.OK)  # True
 
 
 print("\n=== @unique 检查重复值 ===")
@@ -82,7 +82,7 @@ try:
         SUCCESS = 1
         OK = 1
 except ValueError as error:
-    print(type(error).__name__)
+    print(type(error).__name__)  # ValueError
 
 
 print("\n=== match 中使用枚举 ===")

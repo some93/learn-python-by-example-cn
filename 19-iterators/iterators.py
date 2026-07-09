@@ -8,22 +8,22 @@ print("=== Iterable vs Iterator ===")
 numbers = [1, 2, 3]
 
 # 列表可以被 for 遍历，所以它是 Iterable。
-print(isinstance(numbers, Iterable))
+print(isinstance(numbers, Iterable))  # True
 # 但列表本身不是 Iterator，因为它没有记录“当前走到哪里”。
-print(isinstance(numbers, Iterator))
+print(isinstance(numbers, Iterator))  # False
 
 # iter() 会把可迭代对象转换成迭代器。
 it = iter(numbers)
-print(isinstance(it, Iterable))
-print(isinstance(it, Iterator))
+print(isinstance(it, Iterable))  # True
+print(isinstance(it, Iterator))  # True
 
 
 print("\n=== iter() 和 next() ===")
 
 # next() 每调用一次，就从迭代器里取出下一个元素。
-print(next(it))
-print(next(it))
-print(next(it))
+print(next(it))  # 1
+print(next(it))  # 2
+print(next(it))  # 3
 try:
     # 迭代器耗尽后，再取会抛出 StopIteration。
     print(next(it))
@@ -47,10 +47,10 @@ print()
 print("\n=== 生成器天生就是 Iterator ===")
 
 g = (x * x for x in range(3))
-print(isinstance(g, Iterator))
-print(list(g))
+print(isinstance(g, Iterator))  # True
+print(list(g))                  # [0, 1, 4]
 # 生成器也是一次性的，消费完之后再次遍历为空。
-print(list(g))
+print(list(g))                  # []
 
 
 print("\n=== 自定义一次性迭代器 ===")
@@ -73,8 +73,8 @@ class Countdown:
 
 
 countdown = Countdown(3)
-print(list(countdown))
-print(list(countdown))
+print(list(countdown))  # [3, 2, 1]
+print(list(countdown))  # []
 
 
 print("\n=== 自定义可重复遍历的对象 ===")
@@ -90,5 +90,5 @@ class Team:
 
 
 team = Team(["小王", "小李", "小张"])
-print(list(team))
-print(list(team))
+print(list(team))  # ['小王', '小李', '小张']
+print(list(team))  # ['小王', '小李', '小张']

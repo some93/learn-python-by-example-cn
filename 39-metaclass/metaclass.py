@@ -10,9 +10,9 @@ class Hello:
 
 
 # 类本身也是对象，默认由 type 创建。
-print(type(Hello).__name__)
-print(type(Hello()).__name__)
-print(Hello().hello())
+print(type(Hello).__name__)  # type
+print(type(Hello()).__name__)  # Hello
+print(Hello().hello())  # Hello, world!
 
 
 print("\n=== type() 动态创建类 ===")
@@ -26,9 +26,9 @@ def hello_func(self):
 Hello2 = type("Hello2", (object,), {"hello": hello_func})
 
 obj = Hello2()
-print(type(Hello2).__name__)
-print(type(obj).__name__)
-print(obj.hello())
+print(type(Hello2).__name__)  # type
+print(type(obj).__name__)  # Hello2
+print(obj.hello())  # Hello from dynamic class!
 
 
 print("\n=== metaclass 控制类的创建 ===")
@@ -48,8 +48,8 @@ class MyList(list, metaclass=AddMethodMeta):
 
 items = MyList([1, 2])
 items.add(3)
-print(items)
-print(type(MyList).__name__)
+print(items)  # [1, 2, 3]
+print(type(MyList).__name__)  # AddMethodMeta
 
 
 print("\n=== 简易 ORM：收集字段映射 ===")
@@ -122,9 +122,9 @@ class User(Model):
     email = StringField("email")
 
 
-print(User.__table__)
-print(User.__mappings__)
+print(User.__table__)  # user
+print(User.__mappings__)  # {'id': IntegerField(id), 'name': StringField(username), 'email': StringField(email)}
 
 user = User(id=1, name="Alice", email="alice@example.com")
-print(user.name)
-print(user.save_sql())
+print(user.name)  # Alice
+print(user.save_sql())  # INSERT INTO user (id, username, email) VALUES (1, 'Alice', 'alice@example.com')

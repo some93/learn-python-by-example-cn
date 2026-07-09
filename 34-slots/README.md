@@ -36,8 +36,8 @@ student = Student()
 # 普通实例可以在运行时新增任意属性。
 student.name = "Alice"
 student.age = 18
-print(student.name, student.age)
-print(hasattr(student, "__dict__"))
+print(student.name, student.age)  # Alice 18
+print(hasattr(student, "__dict__"))  # True
 
 
 print("\n=== 普通实例还能动态绑定方法 ===")
@@ -50,7 +50,7 @@ def set_score(self, score):
 # MethodType 可以把函数绑定成某个实例的方法。
 student.set_score = MethodType(set_score, student)
 student.set_score(99)
-print(student.score)
+print(student.score)  # 99
 
 
 print("\n=== __slots__ 限制实例属性 ===")
@@ -64,14 +64,14 @@ class Person:
 person = Person()
 person.name = "Bob"
 person.age = 25
-print(person.name, person.age)
-print(hasattr(person, "__dict__"))
+print(person.name, person.age)  # Bob 25
+print(hasattr(person, "__dict__"))  # False
 
 try:
     # score 不在 __slots__ 里，所以不能动态新增。
     person.score = 99
 except AttributeError as error:
-    print(type(error).__name__)
+    print(type(error).__name__)  # AttributeError
 
 
 print("\n=== __slots__ 默认不限制子类 ===")
@@ -85,8 +85,8 @@ class GraduateStudent(Person):
 graduate = GraduateStudent()
 graduate.name = "Charlie"
 graduate.score = 100
-print(graduate.name, graduate.score)
-print(hasattr(graduate, "__dict__"))
+print(graduate.name, graduate.score)  # Charlie 100
+print(hasattr(graduate, "__dict__"))  # True
 
 
 print("\n=== 子类也定义 __slots__ ===")
@@ -101,13 +101,13 @@ under_grad = UnderGrad()
 under_grad.name = "Dave"
 under_grad.age = 20
 under_grad.score = 88
-print(under_grad.name, under_grad.age, under_grad.score)
-print(hasattr(under_grad, "__dict__"))
+print(under_grad.name, under_grad.age, under_grad.score)  # Dave 20 88
+print(hasattr(under_grad, "__dict__"))  # False
 
 try:
     under_grad.gpa = 3.8
 except AttributeError as error:
-    print(type(error).__name__)
+    print(type(error).__name__)  # AttributeError
 ```
 
 ## 🔍 师兄给你逐行拆

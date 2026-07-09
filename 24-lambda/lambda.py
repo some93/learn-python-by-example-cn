@@ -5,8 +5,8 @@ print("=== lambda 基本语法 ===")
 
 # lambda 适合写很短的匿名函数。
 square = lambda x: x * x
-print(square(5))
-print(square.__name__)
+print(square(5))       # 25
+print(square.__name__) # <lambda>
 
 
 def square_def(x):
@@ -14,8 +14,8 @@ def square_def(x):
     return x * x
 
 
-print(square_def(5))
-print(square_def.__name__)
+print(square_def(5))       # 25
+print(square_def.__name__) # square_def
 
 
 print("\n=== lambda 用在 sorted 的 key 参数 ===")
@@ -28,19 +28,19 @@ students = [
 
 # sorted 的 key 参数常见写法：用 lambda 指定排序依据。
 by_score = sorted(students, key=lambda student: student["score"], reverse=True)
-print([student["name"] for student in by_score])
+print([student["name"] for student in by_score])  # ['Bob', 'Alice', 'Charlie']
 
 pairs = [(1, "one"), (3, "three"), (2, "two")]
 # 同一组数据可以按不同字段排序。
-print(sorted(pairs, key=lambda pair: pair[0]))
-print(sorted(pairs, key=lambda pair: len(pair[1])))
+print(sorted(pairs, key=lambda pair: pair[0]))      # [(1, 'one'), (2, 'two'), (3, 'three')]
+print(sorted(pairs, key=lambda pair: len(pair[1]))) # [(1, 'one'), (2, 'two'), (3, 'three')]
 
 
 print("\n=== lambda 配合 map/filter ===")
 
 # lambda 经常和高阶函数一起出现，但别为了简短牺牲可读性。
-print(list(map(lambda x: x * x, [1, 2, 3, 4, 5])))
-print(list(filter(lambda x: x % 2 == 1, range(1, 11))))
+print(list(map(lambda x: x * x, [1, 2, 3, 4, 5])))     # [1, 4, 9, 16, 25]
+print(list(filter(lambda x: x % 2 == 1, range(1, 11)))) # [1, 3, 5, 7, 9]
 
 
 print("\n=== lambda 作为返回值 ===")
@@ -53,8 +53,8 @@ def make_adder(n):
 
 add5 = make_adder(5)
 add10 = make_adder(10)
-print(add5(3))
-print(add10(3))
+print(add5(3))   # 8
+print(add10(3))  # 13
 
 
 print("\n=== 复杂逻辑用 def 更清楚 ===")
@@ -69,6 +69,6 @@ def classify_score(score):
     return "不及格"
 
 
-print(classify_score(95))
-print(classify_score(72))
-print(classify_score(50))
+print(classify_score(95)) # 优秀
+print(classify_score(72)) # 及格
+print(classify_score(50)) # 不及格

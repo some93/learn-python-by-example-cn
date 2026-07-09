@@ -35,7 +35,7 @@ def handle_request(user, request_id, outbox):
 if __name__ == "__main__":
     print("=== 主线程没有绑定上下文 ===")
     # 主线程没有设置 user，所以读取不到子线程里的值。
-    print(getattr(request_context, "user", None))
+    print(getattr(request_context, "user", None))  # None
 
     print("\n=== 每个线程有自己的上下文 ===")
     outbox = Queue()

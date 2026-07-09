@@ -46,13 +46,13 @@ print(calc_sum(*[1, 2, 3, 4])) # 10（解包列表）
 def person(name, age, **kwargs):
     print(f"{name}, {age}, {kwargs}")
 
-person("Alice", 25, city="Beijing", job="Engineer")
+person("Alice", 25, city="Beijing", job="Engineer")  # Alice, 25, {'city': 'Beijing', 'job': 'Engineer'}
 
 # 4. 命名关键字参数
 def person2(name, age, *, city, job):
     print(f"{name}, {age}, {city}, {job}")
 
-person2("Charlie", 35, city="Shanghai", job="Teacher")
+person2("Charlie", 35, city="Shanghai", job="Teacher")  # Charlie, 35, Shanghai, Teacher
 ```
 
 ## 🔍 师兄给你逐行拆

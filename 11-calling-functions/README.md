@@ -37,7 +37,7 @@ print(sorted([3, 1, 4, 1, 5]))  # [1, 1, 3, 4, 5]
 
 # isinstance()：判断类型
 print(isinstance(123, int))      # True
-print(isinstance(123, (int, float)))  # 多类型判断
+print(isinstance(123, (int, float)))  # True
 ```
 
 ## 🔍 师兄给你逐行拆

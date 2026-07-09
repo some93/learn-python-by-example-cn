@@ -43,8 +43,8 @@ print(json_text)
 
 # loads 把 JSON 字符串解析回 Python 对象。
 parsed = json.loads(json_text)
-print(parsed["name"])
-print(parsed["address"]["city"])
+print(parsed["name"])  # Alice
+print(parsed["address"]["city"])  # 北京
 
 
 print("\n=== JSON dump / load 文件 ===")
@@ -61,7 +61,7 @@ try:
     with open(json_file, "r", encoding="utf-8") as file:
         loaded = json.load(file)
 
-    print(loaded["skills"])
+    print(loaded["skills"])  # ['Python', 'Go', 'Rust']
 finally:
     # 演示结束后清理临时目录。
     try:
@@ -99,7 +99,7 @@ try:
     # set 不是 JSON 标准类型，默认无法序列化。
     json.dumps({"numbers": {1, 2, 3}})
 except TypeError as error:
-    print(type(error).__name__)
+    print(type(error).__name__)  # TypeError
 
 
 print("\n=== pickle dumps / loads ===")
@@ -107,11 +107,11 @@ print("\n=== pickle dumps / loads ===")
 data = {"key": "value", "nums": [1, 2, 3]}
 # pickle 会序列化成 bytes，适合 Python 内部临时保存对象。
 pickled = pickle.dumps(data)
-print(type(pickled).__name__)
-print(len(pickled) > 0)
+print(type(pickled).__name__)  # bytes
+print(len(pickled) > 0)  # True
 
 unpickled = pickle.loads(pickled)
-print(unpickled)
+print(unpickled)  # {'key': 'value', 'nums': [1, 2, 3]}
 ```
 
 ## 🔍 师兄给你逐行拆

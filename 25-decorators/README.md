@@ -42,8 +42,8 @@ def say_hello():
     print("Hello!")
 
 
-say_hello()
-print(say_hello.__name__)
+say_hello()                # 调用 say_hello() / Hello!
+print(say_hello.__name__)  # say_hello
 
 
 print("\n=== @ 语法糖的本质 ===")
@@ -55,7 +55,7 @@ def greet(name):
 
 # 手动改写函数变量，可以看清 @ 语法糖的本质。
 greet = log(greet)
-greet("Alice")
+greet("Alice")  # 调用 greet() / Hello, Alice!
 
 
 print("\n=== 装饰器必须返回原函数结果 ===")
@@ -66,7 +66,7 @@ def add(a, b):
     return a + b
 
 
-print(add(3, 5))
+print(add(3, 5))  # 先输出：调用 add()，再输出：8
 
 
 print("\n=== 带参数的装饰器 ===")
@@ -90,7 +90,7 @@ def fetch_data(url):
     return f"数据来自 {url}"
 
 
-print(fetch_data("https://example.com"))
+print(fetch_data("https://example.com"))  # 先输出：[DEBUG] 调用 fetch_data()，再输出：数据来自 https://example.com
 
 
 print("\n=== 统计调用次数的装饰器 ===")
@@ -115,8 +115,8 @@ def double(x):
     return x * 2
 
 
-print(double(10))
-print(double(20))
+print(double(10))  # 先输出：double 第 1 次调用，再输出：20
+print(double(20))  # 先输出：double 第 2 次调用，再输出：40
 ```
 
 ## 🔍 师兄给你逐行拆

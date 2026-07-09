@@ -84,7 +84,7 @@ if __name__ == "__main__":
     thread.start()
 
     print("=== WSGI 应用响应 ===")
-    for path in ["/", "/hello?name=Alice", "/missing"]:
+    for path in ["/", "/hello?name=Alice", "/missing"]:   # 依次输出：200 首页 / 200 Hello, Alice / 404 页面不存在
         status, body = fetch(base_url + path)
         print(status, body)
 

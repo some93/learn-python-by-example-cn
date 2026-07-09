@@ -17,12 +17,12 @@ def lazy_sum(*args):
 
 f = lazy_sum(1, 3, 5, 7, 9)
 # 此时还没有真正求和，f 是一个等待调用的函数。
-print(type(f).__name__)
-print(f.__name__)
-print(f())
+print(type(f).__name__)          # function
+print(f.__name__)                # calc
+print(f())                       # 25
 # __closure__ 可以看到函数是否捕获了外层变量。
-print(f.__closure__ is not None)
-print(len(f.__closure__))
+print(f.__closure__ is not None) # True
+print(len(f.__closure__))        # 1
 
 
 print("\n=== 每次调用都会返回新函数 ===")
@@ -30,9 +30,9 @@ print("\n=== 每次调用都会返回新函数 ===")
 f1 = lazy_sum(1, 2, 3)
 f2 = lazy_sum(1, 2, 3)
 # 参数一样，也会生成两个不同的函数对象。
-print(f1 == f2)
-print(f1())
-print(f2())
+print(f1 == f2)  # False
+print(f1())      # 6
+print(f2())      # 6
 
 
 print("\n=== 循环变量陷阱 ===")
@@ -49,7 +49,7 @@ def count_bad():
     return funcs
 
 
-print([func() for func in count_bad()])
+print([func() for func in count_bad()])  # [9, 9, 9]
 
 
 print("\n=== 修复循环变量陷阱 ===")
@@ -66,7 +66,7 @@ def count_fixed():
     return funcs
 
 
-print([func() for func in count_fixed()])
+print([func() for func in count_fixed()])  # [1, 4, 9]
 
 
 print("\n=== nonlocal 修改外层变量 ===")
@@ -85,9 +85,9 @@ def counter(start=0):
 
 
 c = counter()
-print(c())
-print(c())
-print(c(10))
+print(c())    # 1
+print(c())    # 2
+print(c(10))  # 12
 
 c2 = counter(100)
-print(c2())
+print(c2())   # 101

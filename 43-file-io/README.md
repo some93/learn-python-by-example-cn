@@ -47,8 +47,8 @@ try:
         file.write("你好，世界！\n")
         file.write("第三行内容\n")
 
-    print(text_file.name)
-    print(text_file.exists())
+    print(text_file.name)  # demo.txt
+    print(text_file.exists())  # True
 
     print("\n=== read() 读取全部内容 ===")
     with open(text_file, "r", encoding="utf-8") as file:
@@ -92,7 +92,7 @@ try:
         file.write(b"\x00\x01\x02\x03")
 
     with open(bin_file, "rb") as file:
-        print(file.read())
+        print(file.read())  # b'\x00\x01\x02\x03'
 
     print("\n=== 编码错误处理 ===")
     gbk_file = Path(tmp_dir) / "gbk.txt"
@@ -103,10 +103,10 @@ try:
         with open(gbk_file, "r", encoding="utf-8") as file:
             print(file.read())
     except UnicodeDecodeError as error:
-        print(type(error).__name__)
+        print(type(error).__name__)  # UnicodeDecodeError
 
     with open(gbk_file, "r", encoding="gbk") as file:
-        print(file.read())
+        print(file.read())  # 你好
 finally:
     # 清理演示文件；Windows 沙箱偶尔会拒绝删除，所以这里容错。
     try:

@@ -55,11 +55,11 @@ if __name__ == "__main__":
     server_thread.join()
 
     print("=== UDP 客户端响应 ===")
-    for response in responses:
+    for response in responses:        # 依次输出：ACK: Hello / ACK: World / ACK: UDP
         print(response)
 
     print("\n=== UDP 服务器处理结果 ===")
-    while not server_logs.empty():
+    while not server_logs.empty():    # 依次输出：服务器收到: Hello / 服务器收到: World / 服务器收到: UDP
         print(server_logs.get())
 
-    print("\nUDP 通信完成")
+    print("\nUDP 通信完成")  # UDP 通信完成

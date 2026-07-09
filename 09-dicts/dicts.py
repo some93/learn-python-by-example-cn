@@ -2,13 +2,13 @@
 
 # 创建字典
 scores = {'Michael': 95, 'Bob': 75, 'Tracy': 85}
-print(scores)
+print(scores)                 # {'Michael': 95, 'Bob': 75, 'Tracy': 85}
 print(scores['Michael'])     # 95
 
 # 添加 / 修改
 scores['Adam'] = 67          # 添加新键值对
 scores['Bob'] = 80           # 修改已有的
-print(scores)
+print(scores)                 # {'Michael': 95, 'Bob': 80, 'Tracy': 85, 'Adam': 67}
 
 # 判断 key 是否存在
 print('Michael' in scores)   # True
@@ -20,22 +20,22 @@ print(scores.get('Tom', -1))     # -1
 
 # 删除 key
 scores.pop('Adam')
-print(scores)
+print(scores)                 # {'Michael': 95, 'Bob': 80, 'Tracy': 85}
 
 # 遍历字典
 print("--- 遍历 ---")
-for key in scores:
+for key in scores:            # Michael: 95 / Bob: 80 / Tracy: 85
     print(f"{key}: {scores[key]}")
 
 # 同时遍历 key 和 value
-for key, value in scores.items():
+for key, value in scores.items():  # Michael => 95 / Bob => 80 / Tracy => 85
     print(f"{key} => {value}")
 
 # 获取所有 key 和 value
-print(list(scores.keys()))
-print(list(scores.values()))
+print(list(scores.keys()))    # ['Michael', 'Bob', 'Tracy']
+print(list(scores.values()))  # [95, 80, 85]
 
 # dict 的 key 必须是不可变类型
 # d = {[1, 2]: 'list_key'}  # TypeError: unhashable type: 'list'
 d = {(1, 2): 'tuple_key'}   # tuple 可以作为 key
-print(d)
+print(d)                     # {(1, 2): 'tuple_key'}

@@ -17,8 +17,8 @@ class Student:
 
 
 student = Student("Alice")
-print(student)
-print([student])
+print(student)  # Student(Alice)
+print([student])  # [Student(Alice)]
 
 
 print("\n=== __iter__ 和 __next__ ===")
@@ -40,7 +40,7 @@ class Fib:
         return self.a
 
 
-print(list(Fib(100)))
+print(list(Fib(100)))  # [1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
 
 
 print("\n=== __getitem__ 支持下标和切片 ===")
@@ -63,10 +63,10 @@ class FibList:
 
 
 fib = FibList()
-print(fib[0])
-print(fib[5])
-print(fib[:6])
-print(fib[2:8:2])
+print(fib[0])  # 1
+print(fib[5])  # 8
+print(fib[:6])  # [1, 1, 2, 3, 5, 8]
+print(fib[2:8:2])  # [2, 5, 13]
 
 
 print("\n=== __getattr__ 动态属性 ===")
@@ -87,8 +87,8 @@ class Chain:
 
 
 chain = Chain()
-print(chain.api.users.list)
-print(chain._path == "")
+print(chain.api.users.list)  # /api/users/list
+print(chain._path == "")  # True
 
 
 print("\n=== __call__ 让实例像函数一样调用 ===")
@@ -105,9 +105,9 @@ class Counter:
 
 
 counter = Counter()
-print(counter())
-print(counter())
-print(counter(10))
-print(callable(counter))
-print(callable(Student))
-print(callable(student))
+print(counter())  # 1
+print(counter())  # 2
+print(counter(10))  # 12
+print(callable(counter))  # True
+print(callable(Student))  # True
+print(callable(student))  # False

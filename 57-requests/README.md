@@ -119,29 +119,29 @@ def main():
         # params 会被 requests 自动编码到 URL 查询字符串里。
         response = requests.get(f"{base_url}/api/hello", params={"name": "Alice"}, timeout=3)
         response.raise_for_status()
-        print(response.status_code)
-        print(response.headers["Content-Type"])
-        print(response.json())
+        print(response.status_code)  # 200
+        print(response.headers["Content-Type"])  # application/json; charset=utf-8
+        print(response.json())  # {'message': 'Hello, Alice', 'query': {'name': ['Alice']}}
 
         print("\n=== POST 表单和 JSON ===")
         # data 发送表单，json 发送 JSON；两者的 Content-Type 不同。
         form_response = requests.post(f"{base_url}/api/users", data={"name": "Bob", "age": "20"}, timeout=3)
         json_response = requests.post(f"{base_url}/api/users", json={"name": "Charlie", "age": 21}, timeout=3)
-        print(form_response.json())
-        print(json_response.json())
+        print(form_response.json())  # {'received': {'name': 'Bob', 'age': '20'}}
+        print(json_response.json())  # {'received': {'name': 'Charlie', 'age': 21}}
 
         print("\n=== 自定义请求头 ===")
         # headers 参数可以覆盖或补充请求头。
         headers = {"User-Agent": "learn-python-demo/1.0"}
         header_response = requests.get(f"{base_url}/api/headers", headers=headers, timeout=3)
-        print(header_response.json())
+        print(header_response.json())  # {'user_agent': 'learn-python-demo/1.0'}
 
         print("\n=== Session 保持 Cookie ===")
         # Session 适合登录态、Cookie、连接复用等连续请求场景。
         session = requests.Session()
         session.get(f"{base_url}/api/set-cookie", timeout=3)
         cookie_response = session.get(f"{base_url}/api/cookies", timeout=3)
-        print(cookie_response.json())
+        print(cookie_response.json())  # {'token': 'abc123'}
 
         print("\n=== HTTP 错误处理 ===")
         # requests 默认不会因为 404 抛异常，需要主动调用 raise_for_status。
@@ -149,8 +149,8 @@ def main():
         try:
             not_found.raise_for_status()
         except requests.HTTPError as error:
-            print(type(error).__name__)
-            print(not_found.status_code)
+            print(type(error).__name__)  # HTTPError
+            print(not_found.status_code)  # 404
     finally:
         # 本地演示服务用完要关闭，避免后台线程继续占用端口。
         server.shutdown()

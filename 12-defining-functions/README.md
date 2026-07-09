@@ -19,13 +19,13 @@
 def greet(name):
     print(f"Hello, {name}!")
 
-greet("World")
+greet("World")  # Hello, World!
 
 # 带返回值
 def add(a, b):
     return a + b
 
-print(f"1 + 2 = {add(1, 2)}")
+print(f"1 + 2 = {add(1, 2)}")  # 1 + 2 = 3
 
 # 空函数：pass 占位
 def do_nothing():
@@ -38,7 +38,7 @@ def move(x, y, step):
     return x + step, y + step
 
 x, y = move(100, 200, 50)
-print(f"新坐标: ({x}, {y})")
+print(f"新坐标: ({x}, {y})")  # 新坐标: (150, 250)
 
 # 参数类型检查
 def my_abs(x):
@@ -46,7 +46,7 @@ def my_abs(x):
         raise TypeError('参数类型错误')
     return x if x >= 0 else -x
 
-print(my_abs(-9))
+print(my_abs(-9))  # 9
 ```
 
 ## 🔍 师兄给你逐行拆

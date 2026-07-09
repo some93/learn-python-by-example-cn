@@ -2,7 +2,7 @@
 
 # 创建列表
 classmates = ['Michael', 'Bob', 'Tracy']
-print(classmates)
+print(classmates)         # ['Michael', 'Bob', 'Tracy']
 print(len(classmates))    # 3
 
 # 索引访问：正索引从 0 开始，负索引从 -1 开始
@@ -11,27 +11,27 @@ print(classmates[-1])     # Tracy（最后一个）
 
 # 追加元素
 classmates.append('Adam')
-print(classmates)
+print(classmates)         # ['Michael', 'Bob', 'Tracy', 'Adam']
 
 # 插入到指定位置
 classmates.insert(1, 'Jack')
-print(classmates)
+print(classmates)         # ['Michael', 'Jack', 'Bob', 'Tracy', 'Adam']
 
 # 删除末尾元素
 classmates.pop()
-print(classmates)
+print(classmates)         # ['Michael', 'Jack', 'Bob', 'Tracy']
 
 # 删除指定位置元素
 classmates.pop(1)
-print(classmates)
+print(classmates)         # ['Michael', 'Bob', 'Tracy']
 
 # 替换元素（直接赋值）
 classmates[1] = 'Sarah'
-print(classmates)
+print(classmates)         # ['Michael', 'Sarah', 'Tracy']
 
 # list 可以包含不同类型的元素
 mixed = ['Apple', 123, True, None, [1, 2, 3]]
-print(mixed)
+print(mixed)              # ['Apple', 123, True, None, [1, 2, 3]]
 
 # 嵌套列表（二维列表）
 matrix = [

@@ -15,10 +15,10 @@ try:
     result = 10 / 0
     print("结果:", result)
 except ZeroDivisionError as error:
-    print("except:", error)
+    print("except:", error)  # except: division by zero
 finally:
     # finally 不管有没有异常都会执行，常用于释放资源。
-    print("finally...")
+    print("finally...")  # finally...
 
 
 print("\n=== 捕获多种异常 ===")
@@ -27,7 +27,7 @@ try:
     # int("abc") 会先抛出 ValueError，后面的除法不会执行。
     result = 10 / int("abc")
 except ValueError as error:
-    print("ValueError:", error)
+    print("ValueError:", error)  # ValueError: invalid literal for int() with base 10: 'abc'
 except ZeroDivisionError as error:
     print("ZeroDivisionError:", error)
 
@@ -40,9 +40,9 @@ except ZeroDivisionError:
     print("除零错误")
 else:
     # else 只在 try 没有异常时执行。
-    print("没有异常，结果:", result)
+    print("没有异常，结果:", result)  # 没有异常，结果: 5.0
 finally:
-    print("清理资源")
+    print("清理资源")  # 清理资源
 
 
 print("\n=== 异常继承关系 ===")
@@ -51,7 +51,7 @@ try:
     10 / 0
 except Exception as error:
     # Exception 能捕获大多数业务异常，但不要无脑吞掉错误。
-    print(type(error).__name__)
+    print(type(error).__name__)  # ZeroDivisionError
 
 
 print("\n=== logging 记录异常 ===")
@@ -76,7 +76,7 @@ def check_age(age):
 try:
     check_age(-1)
 except ValueError as error:
-    print("捕获:", error)
+    print("捕获:", error)  # 捕获: 年龄不能为负数: -1
 
 
 print("\n=== 自定义异常 ===")
@@ -85,6 +85,7 @@ print("\n=== 自定义异常 ===")
 class AgeError(ValueError):
     # 自定义异常可以让调用方更精确地捕获业务错误。
     pass
+
 
 
 def check_adult(age):
@@ -96,7 +97,7 @@ def check_adult(age):
 try:
     check_adult(16)
 except AgeError as error:
-    print("AgeError:", error)
+    print("AgeError:", error)  # AgeError: 未成年人不能注册
 
 
 print("\n=== 异常链 raise from ===")
@@ -108,8 +109,8 @@ try:
         # raise from 会保留原始异常，方便定位根因。
         raise RuntimeError("计算失败") from error
 except RuntimeError as error:
-    print(error)
-    print(type(error.__cause__).__name__)
+    print(error)  # 计算失败
+    print(type(error.__cause__).__name__)  # ZeroDivisionError
 
 
 print("\n=== 重新抛出异常 ===")
@@ -118,8 +119,8 @@ try:
     try:
         check_age(-5)
     except ValueError:
-        print("记录后继续抛出")
+        print("记录后继续抛出")  # 记录后继续抛出
         # 单独写 raise 表示重新抛出当前异常。
         raise
 except ValueError as error:
-    print("外层捕获:", error)
+    print("外层捕获:", error)  # 外层捕获: 年龄不能为负数: -5

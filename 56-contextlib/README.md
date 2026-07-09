@@ -47,7 +47,7 @@ class Resource:
 
 
 with Resource("文件") as resource:
-    print(f"使用 {resource.name}")
+    print(f"使用 {resource.name}")  # 使用 文件
 
 
 print("\n=== @contextmanager 简化写法 ===")
@@ -65,7 +65,7 @@ def managed_resource(name):
 
 
 with managed_resource("数据库连接") as name:
-    print(f"使用 {name}")
+    print(f"使用 {name}")  # 使用 数据库连接
 
 
 print("\n=== suppress 忽略指定异常 ===")
@@ -74,7 +74,7 @@ with suppress(ValueError):
     # 只忽略指定异常，适合“失败也没关系”的小范围代码。
     int("not-a-number")
 
-print("程序继续执行")
+print("程序继续执行")  # 程序继续执行
 
 
 print("\n=== closing 自动调用 close() ===")
@@ -89,7 +89,7 @@ class Connection:
 
 
 with closing(Connection()) as connection:
-    print(type(connection).__name__)
+    print(type(connection).__name__)  # Connection
 
 
 print("\n=== redirect_stdout 捕获输出 ===")
@@ -101,7 +101,7 @@ with redirect_stdout(buffer):
     print("第一行")
     print("第二行")
 
-print(buffer.getvalue().splitlines())
+print(buffer.getvalue().splitlines())  # ['第一行', '第二行']
 
 
 print("\n=== ExitStack 管理多个资源 ===")
@@ -110,10 +110,10 @@ with ExitStack() as stack:
     # enter_context 可以动态进入多个上下文管理器。
     first = stack.enter_context(managed_resource("缓存"))
     second = stack.enter_context(managed_resource("日志"))
-    print(f"使用 {first} 和 {second}")
+    print(f"使用 {first} 和 {second}")  # 使用 缓存 和 日志
 
 # ExitStack 退出时会按后进先出的顺序清理资源。
-print("全部资源已释放")
+print("全部资源已释放")  # 全部资源已释放
 ```
 
 ## 🔍 师兄给你拆开讲

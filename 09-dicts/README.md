@@ -17,12 +17,13 @@
 ```python
 # 创建字典
 scores = {'Michael': 95, 'Bob': 75, 'Tracy': 85}
+print(scores)                 # {'Michael': 95, 'Bob': 75, 'Tracy': 85}
 print(scores['Michael'])     # 95
 
 # 添加 / 修改
 scores['Adam'] = 67
 scores['Bob'] = 80
-print(scores)
+print(scores)                 # {'Michael': 95, 'Bob': 80, 'Tracy': 85, 'Adam': 67}
 
 # 判断 key 是否存在
 print('Michael' in scores)   # True
@@ -35,7 +36,7 @@ print(scores.get('Tom', -1))     # -1
 scores.pop('Adam')
 
 # 遍历
-for key, value in scores.items():
+for key, value in scores.items():  # Michael => 95 / Bob => 80 / Tracy => 85
     print(f"{key} => {value}")
 
 # key 必须是不可变类型

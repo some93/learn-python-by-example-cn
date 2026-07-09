@@ -21,8 +21,8 @@ def fact(n):
         return 1
     return n * fact(n - 1)
 
-print(f"5! = {fact(5)}")      # 120
-print(f"10! = {fact(10)}")    # 3628800
+print(f"5! = {fact(5)}")      # 5! = 120
+print(f"10! = {fact(10)}")    # 10! = 3628800
 
 # 汉诺塔
 def hanoi(n, source, target, auxiliary):
@@ -34,11 +34,11 @@ def hanoi(n, source, target, auxiliary):
     hanoi(n - 1, auxiliary, target, source)
 
 print("--- 汉诺塔 (3个盘子) ---")
-hanoi(3, 'A', 'C', 'B')
+hanoi(3, 'A', 'C', 'B')  # 依次输出：A -> C / A -> B / C -> B / A -> C / B -> A / B -> C / A -> C
 
 # 栈溢出
 import sys
-print(f"递归深度限制: {sys.getrecursionlimit()}")
+print(f"递归深度限制: {sys.getrecursionlimit()}")  # 递归深度限制: 1000
 # fact(1000) 会报 RecursionError!
 ```
 
