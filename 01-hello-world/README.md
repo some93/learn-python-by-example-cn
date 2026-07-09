@@ -1,4 +1,4 @@
-# 第 1 关：Hello World（师兄带你学 Python）
+# 第 1 关：Hello World
 
 ## 🎯 这一关你会学到
 

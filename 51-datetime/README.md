@@ -1,4 +1,4 @@
-# 第 51 关：datetime（师兄带你学 Python）
+# 第 51 关：datetime
 
 ## 🎯 这一关你会学到
 

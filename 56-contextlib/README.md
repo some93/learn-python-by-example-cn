@@ -1,4 +1,4 @@
-# 第 56 关：contextlib（师兄带你学 Python）
+# 第 56 关：contextlib
 
 ## 🎯 这一关你会学到
 

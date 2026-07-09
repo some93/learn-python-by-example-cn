@@ -1,4 +1,4 @@
-# 第 20 关：map/reduce（师兄带你学 Python）
+# 第 20 关：map/reduce
 
 ## 🎯 这一关你会学到
 

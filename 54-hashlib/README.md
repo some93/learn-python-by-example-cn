@@ -1,4 +1,4 @@
-# 第 54 关：hashlib（师兄带你学 Python）
+# 第 54 关：hashlib
 
 ## 🎯 这一关你会学到
 

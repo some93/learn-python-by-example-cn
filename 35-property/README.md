@@ -1,4 +1,4 @@
-# 第 35 关：@property（师兄带你学 Python）
+# 第 35 关：@property
 
 ## 🎯 这一关你会学到
 

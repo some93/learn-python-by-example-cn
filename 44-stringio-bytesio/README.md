@@ -1,4 +1,4 @@
-# 第 44 关：StringIO 和 BytesIO（师兄带你学 Python）
+# 第 44 关：StringIO 和 BytesIO
 
 ## 🎯 这一关你会学到
 

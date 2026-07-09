@@ -1,4 +1,4 @@
-# 第 57 关：requests（师兄带你学 Python）
+# 第 57 关：requests
 
 ## 🎯 这一关你会学到
 

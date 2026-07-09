@@ -1,4 +1,4 @@
-# 第 52 关：collections（师兄带你学 Python）
+# 第 52 关：collections
 
 ## 🎯 这一关你会学到
 

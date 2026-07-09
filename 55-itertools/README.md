@@ -1,4 +1,4 @@
-# 第 55 关：itertools（师兄带你学 Python）
+# 第 55 关：itertools
 
 ## 🎯 这一关你会学到
 
